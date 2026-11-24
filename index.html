@@ -11,10 +11,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Jazz & Wine</title>
-    <link rel="stylesheet" href="styles/style.css?v=13">
+    <link rel="stylesheet" href="styles/style.css?v=14">
     <script>
         //if something fails, a small red message shows what (so it can be reported)
-        window.JW_BUILD = "13"
+        window.JW_BUILD = "14"
         window.jwShowError = function (text) {
             try {
                 var box = document.getElementById("jw-error")
@@ -68,13 +68,13 @@
                 <span class="keys keys-only"><kbd>&larr;</kbd><kbd>&rarr;</kbd></span>
                 <span class="keys touch-only"><kbd class="pad">&#9664;</kbd><kbd class="pad">&#9654;</kbd></span>
                 <span class="text keys-only">run left and right</span>
-                <span class="text touch-only">drag the joystick left or right to run</span>
+                <span class="text touch-only">hold the left or right side, or drag like a joystick</span>
               </div>
               <div class="row">
                 <span class="keys keys-only"><kbd>&uarr;</kbd><kbd class="wide">space</kbd></span>
                 <span class="keys touch-only"><kbd class="pad round">&#9650;</kbd></span>
                 <span class="text keys-only">jump</span>
-                <span class="text touch-only">slide up to jump (you can do both at once)</span>
+                <span class="text touch-only">tap the top, or slide up (you can run and jump at once)</span>
               </div>
             </div>
 
@@ -109,7 +109,7 @@
         <button id="startButton">Play</button>
         <button id="handButton">Joystick: both sides</button>
         <button id="fullscreenButton">&#9974; Full screen</button>
-        <p id="build">version 13</p>
+        <p id="build">version 14</p>
         <p id="ios-hint">For full screen on iPhone: tap <b>Share</b> &rarr; <b>Add to Home Screen</b>, then open Jazz &amp; Wine from there.</p>
 
       </div>
@@ -121,6 +121,11 @@
 
       <!-- the joystick lives OUTSIDE the game, in a band at one side (left or right hand) -->
       <div id="zone-left" class="zone">
+        <div class="guide">
+          <span class="g g-up">&#9650;</span>
+          <span class="g g-left">&#9664;</span>
+          <span class="g g-right">&#9654;</span>
+        </div>
         <div class="stick idle">
           <span class="mark up">&#9650;</span>
           <span class="mark left">&#9664;</span>
@@ -135,6 +140,11 @@
       </div>
 
       <div id="zone-right" class="zone">
+        <div class="guide">
+          <span class="g g-up">&#9650;</span>
+          <span class="g g-left">&#9664;</span>
+          <span class="g g-right">&#9654;</span>
+        </div>
         <div class="stick idle">
           <span class="mark up">&#9650;</span>
           <span class="mark left">&#9664;</span>
@@ -153,18 +163,18 @@
     <p>Turn your phone sideways<br>to play Jazz &amp; Wine</p>
   </div>
 
-    <script src="js/background.js?v=13"></script>
-    <script src="js/catNinja.js?v=13"></script>
-    <script src="js/cat.js?v=13"></script>
-    <script src="js/bottleBig.js?v=13"></script>
-    <script src="js/runnerCat.js?v=13"></script>
-    <script src="js/bread.js?v=13"></script>
-    <script src="js/effects.js?v=13"></script>
-    <script src="js/tutorial.js?v=13"></script>
-    <script src="js/glass.js?v=13"></script>
-    <script src="js/player.js?v=13"></script>
-    <script src="js/game.js?v=13"></script>
-    <script src="js/index.js?v=13"></script>
+    <script src="js/background.js?v=14"></script>
+    <script src="js/catNinja.js?v=14"></script>
+    <script src="js/cat.js?v=14"></script>
+    <script src="js/bottleBig.js?v=14"></script>
+    <script src="js/runnerCat.js?v=14"></script>
+    <script src="js/bread.js?v=14"></script>
+    <script src="js/effects.js?v=14"></script>
+    <script src="js/tutorial.js?v=14"></script>
+    <script src="js/glass.js?v=14"></script>
+    <script src="js/player.js?v=14"></script>
+    <script src="js/game.js?v=14"></script>
+    <script src="js/index.js?v=14"></script>
 
 
 

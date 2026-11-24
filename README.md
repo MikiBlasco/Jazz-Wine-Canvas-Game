@@ -17,6 +17,6 @@ this is a game where:
 - The normal cats fall faster as the score goes up (from 70 points), and there are fewer of them at the end.
 - If you get 0 points you gill get Game Over.
 - Every level has a clock: if it runs out before you reach the next level, you lose.
-- It also works on phones and tablets held sideways: full screen (on iPhone: Share -> Add to Home Screen) and a floating joystick in a band at the side of the game (on both sides, or only the left or the right hand, your choice): drag left or right to run, slide up to jump.
+- It also works on phones and tablets held sideways: full screen (on iPhone: Share -> Add to Home Screen) and a floating joystick in a band at the side of the game (on both sides, or only the left or the right hand, your choice): hold the left or right side (or drag like a joystick) to run, tap the top or slide up to jump.
 
 

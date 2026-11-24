@@ -163,6 +163,7 @@ const DEAD_START = 8        // px of drag before the dog starts running (small =
 const DEAD_STOP = 3         // once running, it stops only when the thumb is almost back at the center
 const FOLLOW = 14           // the stick follows the thumb sideways beyond this distance
 const JUMP_DISTANCE = 16    // sliding up this much makes the dog jump
+const MOVE_START = 8         // the thumb has to slide this much to be a joystick (before that it is a press)
 const JUMP_REARM = 5        // the thumb has to come back this close to be able to jump again
 
 const HAND_KEY = "jazz-wine-hand"
@@ -198,6 +199,8 @@ function makeStick(zone) {
     let x = 0, y = 0
     let running = 0          // -1 left, 0 none, 1 right
     let jumpArmed = true
+    let joystickMode = false   // false while it is just a press; true once the thumb slides
+    let noSlideJumpUntil = 0
 
     const put = () => {
         stick.style.left = `${x}px`
@@ -217,6 +220,13 @@ function makeStick(zone) {
     function move(event) {
         let dx = event.clientX - x
         let dy = event.clientY - y
+
+        //a plain press (the thumb has not slid yet): the button behaviour goes on
+        if (!joystickMode) {
+            if (Math.hypot(dx, dy) < MOVE_START) return
+            joystickMode = true
+            running = 0
+        }
 
         //the stick follows the thumb sideways and downwards
         if (dx > FOLLOW) { x = event.clientX - FOLLOW; dx = FOLLOW }
@@ -239,7 +249,7 @@ function makeStick(zone) {
 
         //one jump for every upward slide
         if (dy < -JUMP_DISTANCE) {
-            if (jumpArmed && !game.winning && !game.paused) player.jump()
+            if (jumpArmed && performance.now() > noSlideJumpUntil && !game.winning && !game.paused) player.jump()
             jumpArmed = false
         } else if (dy > -JUMP_REARM) {
             jumpArmed = true
@@ -255,6 +265,8 @@ function makeStick(zone) {
         stickPointer = null
         running = 0
         jumpArmed = true
+        joystickMode = false
+        zone.classList.remove("pressing")
         keys.left = false
         keys.right = false
         updateVelocity()
@@ -272,10 +284,30 @@ function makeStick(zone) {
         y = event.clientY
         running = 0
         jumpArmed = true
+        joystickMode = false
         put()
         knob.style.transform = ""
         stick.classList.remove("idle")
         stick.classList.add("active")
+        zone.classList.add("pressing")
+
+        //a press works like a button: the top of the band jumps, and below it
+        //the left half runs left and the right half runs right
+        const rect = zone.getBoundingClientRect()
+        const inTop = event.clientY - rect.top < rect.height * 0.36
+        const side = event.clientX - (rect.left + rect.width / 2)
+
+        if (inTop) {
+            if (!game.winning && !game.paused) player.jump()
+            noSlideJumpUntil = performance.now() + 300
+        } else if (side < -6) {
+            running = -1
+        } else if (side > 6) {
+            running = 1
+        }
+        keys.left = running === -1
+        keys.right = running === 1
+        updateVelocity()
     })
 
     zone.addEventListener("pointermove", event => {

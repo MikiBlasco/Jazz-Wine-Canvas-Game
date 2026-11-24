@@ -20,12 +20,18 @@ const cat = new Cat(ctx)
 //create new second secondary from the CatNinja class
 const catNinja = new CatNinja(ctx)
 
+//create the cat that runs on the floor (the dog has to jump over it)
+const runnerCat = new RunnerCat(ctx)
+
+//create the special bread that falls only a few times
+const bread = new Bread(ctx)
+
 //create new Background from the Background class
 const background = new Background(ctx)
 
 
 //create new Game from the Game class
-const game = new Game(ctx, player, glass, bottleBig, cat, catNinja, background)
+const game = new Game(ctx, player, glass, bottleBig, cat, catNinja, background, runnerCat, bread)
 
 //Button-----------------------------------------------------------------------------------------------
 const startButton = document.getElementById("startButton")
@@ -43,19 +49,49 @@ startButton.onclick = ()=> {
 //Events------------------------------------------------------------------------------
 
 //link movement to the keyboard.
+//left / right move the dog, up / space / W make it jump.
+const keys = { left: false, right: false }
+
+function updateVelocity() {
+    player.vx = (keys.right ? 8 : 0) - (keys.left ? 8 : 0)
+}
+
 document.addEventListener('keydown', (event)=>{
     switch (event.code) {
         case "ArrowLeft":
-            player.vx = -8
+        case "KeyA":
+            keys.left = true
+            updateVelocity()
+            event.preventDefault()
             break;
         case "ArrowRight":
-            player.vx = 8
+        case "KeyD":
+            keys.right = true
+            updateVelocity()
+            event.preventDefault()
+            break;
+        case "ArrowUp":
+        case "KeyW":
+        case "Space":
+            //holding the key does not make the dog jump again and again
+            if (!event.repeat) player.jump()
+            event.preventDefault()
     }
 });
 
+//only the key that is released stops its own direction
+//(releasing the jump key does not stop the dog)
 document.addEventListener("keyup", (event)=>{
-    player.vx = 0;
-    player.vy = 0;
+    switch (event.code) {
+        case "ArrowLeft":
+        case "KeyA":
+            keys.left = false
+            break;
+        case "ArrowRight":
+        case "KeyD":
+            keys.right = false
+    }
+    updateVelocity()
 })
 
 

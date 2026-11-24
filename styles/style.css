@@ -97,8 +97,18 @@ canvas {
     width: 75px;
 }
 
+#bread {
+    width: 55px;
+}
+
+#catRun {
+    width: 70px;
+}
+
 
 ul li {
+    width: 33%;
+    justify-content: center;
     color:rgb(7, 107, 7);
     font-weight: bolder;
     font-size: 20px;
@@ -108,10 +118,12 @@ ul li {
 }
 
 ul {
-    width: 350px;
+    width: 420px;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     justify-content: space-between;
+    row-gap: 6px;
     list-style: none;
 }
 

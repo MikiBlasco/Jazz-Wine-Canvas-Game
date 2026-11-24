@@ -1,5 +1,5 @@
 class Game {
-    constructor(ctx, player, glass, bottleBig, cat, catNinja, background) {
+    constructor(ctx, player, glass, bottleBig, cat, catNinja, background, runnerCat, bread) {
         this.ctx = ctx;
         this.player = player;
         this.glass = glass;
@@ -7,6 +7,8 @@ class Game {
         this.cat = cat;
         this.catNinja = catNinja;
         this.background = background;
+        this.runnerCat = runnerCat;
+        this.bread = bread;
         this.frameNumber = 0;
         this.x;
         this.y;
@@ -48,6 +50,8 @@ class Game {
         this.catNinja.generate(this.score, this.frameNumber)
         this.glass.generate(this.frameNumber)
         this.bottleBig.generate(this.score, this.frameNumber)
+        this.runnerCat.generate(this.score)
+        this.bread.generate(this.score)
     }
  
     destroySecondarys(){
@@ -63,7 +67,9 @@ class Game {
         this.glass.move(),
         this.bottleBig.move()
         this.catNinja.move(this.catsN),
-        this.cat.move()        
+        this.cat.move()
+        this.runnerCat.move()
+        this.bread.move()
     }
 
     draw(){
@@ -73,6 +79,8 @@ class Game {
         this.cat.draw(),
         this.catNinja.draw(this.catsN),
         this.bottleBig.draw(),
+        this.runnerCat.draw(),
+        this.bread.draw(),
         this.player.draw()         
         //this.score.draw()  
     }
@@ -111,6 +119,22 @@ class Game {
             ninjaCat2.play()
             cat1.play()
             cat2.play()
+        }
+
+        //cat running on the floor: same damage as the big cat
+        if (this.runnerCat.collect(this.player) > 0) {
+            this.score -= 10
+            ninjaCat1.play()
+            ninjaCat2.play()
+            cat1.play()
+            cat2.play()
+        }
+
+        //special bread: twice the points of a bottle
+        if (this.bread.collect(this.player) > 0) {
+            this.score += 10
+            bigBottle5.play()
+            bigBottle6.play()
         }
     }
     

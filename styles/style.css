@@ -26,6 +26,12 @@ body {
 /* ===================== Game ===================== */
 
 #in-canvas {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#screen {
     position: relative;
     border-radius: 30px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
@@ -35,6 +41,8 @@ canvas {
     display: block;
     border-radius: 30px;
 }
+
+#zone-left, #zone-right { display: none; }
 
 /* --s is the size of the game on this screen (1 = 900x500 pixels) */
 :root { --s: 1; }
@@ -257,9 +265,9 @@ kbd.wide { min-width: 64px; font-size: 13px; }
 }
 
 
-/* ===================== Touch controls ===================== */
-
-#touch-controls { display: none; }
+/* ===================== Touch controls =====================
+   On phones the game takes the middle of the screen and the controls sit
+   in the bands at its sides, so the fingers never cover the game. */
 
 html.touch body {
     overscroll-behavior: none;
@@ -268,35 +276,51 @@ html.touch body {
     -webkit-touch-callout: none;
 }
 
-html.touch #in-canvas,
-html.touch #touch-controls { touch-action: none; }
+html.touch #in-canvas {
+    position: fixed;
+    inset: 0;
+    touch-action: none;
+    justify-content: flex-start;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
 
-html.touch #touch-controls { display: block; }
+/* the free space on the sides is shared between the two bands (set from the script) */
+html.touch #zone-left,
+html.touch #zone-right {
+    display: flex;
+    flex: 1 1 0;
+    align-items: flex-end;
+    justify-content: center;
+    align-self: stretch;
+    padding: 0 10px 8%;
+    touch-action: none;
+}
+
+html.touch #zone-left { flex: 1.3 1 0; }
+html.touch #screen { flex: none; }
 
 #dpad, #btnJump {
-    position: absolute;
-    bottom: 5%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(255, 255, 255, 0.9);
-    background: rgba(255, 255, 255, 0.16);
-    border: 2px solid rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.14);
+    border: 2px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
     touch-action: none;
 }
 
 #dpad {
-    left: max(2%, env(safe-area-inset-left));
-    width: max(150px, calc(230px * var(--s)));
-    height: max(64px, calc(92px * var(--s)));
+    width: 100%;
+    max-width: 230px;
+    height: clamp(64px, 28vh, 110px);
     border-radius: 999px;
 }
 
 #dpad span {
     flex: 1;
     text-align: center;
-    font-size: max(26px, calc(40px * var(--s)));
+    font-size: clamp(26px, 8vh, 42px);
     border-radius: 999px;
     padding: 4px 0;
     pointer-events: none;
@@ -305,11 +329,11 @@ html.touch #touch-controls { display: block; }
 #dpad span.on { background: rgba(255, 213, 74, 0.55); color: #2a0f00; }
 
 #btnJump {
-    right: max(3%, env(safe-area-inset-right));
-    width: max(76px, calc(110px * var(--s)));
-    height: max(76px, calc(110px * var(--s)));
+    width: 100%;
+    max-width: 120px;
+    aspect-ratio: 1;
     border-radius: 50%;
-    font-size: max(30px, calc(46px * var(--s)));
+    font-size: clamp(30px, 9vh, 46px);
 }
 
 #btnJump.on { background: rgba(255, 213, 74, 0.55); color: #2a0f00; }
@@ -320,6 +344,10 @@ kbd.round { border-radius: 50%; min-width: 36px; }
 .touch-only { display: none; }
 html.touch .touch-only { display: flex; }
 html.touch .keys-only { display: none; }
+
+#ios-hint { display: none; margin: 0; max-width: 360px; text-align: center; font-size: 12px; color: #cdbfe6; line-height: 1.35; }
+html.ios:not(.standalone) #ios-hint { display: block; }
+#ios-hint b { color: #ffd54a; }
 
 /* ===================== Turn the phone ===================== */
 

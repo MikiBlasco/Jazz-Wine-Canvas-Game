@@ -42,6 +42,7 @@ startButton.onclick = ()=> {
     outCanvas.classList.toggle("hidden")
     startButton.textContent = "!Speed Up!"
     startButton.blur();
+    enterFullscreen()
     fitScreen()
     checkOrientation()
     game.start();
@@ -52,9 +53,27 @@ startButton.onclick = ()=> {
 const isTouch = document.documentElement.classList.contains("touch")
 
 //the game is 900x500 inside; it is scaled to fit any screen
+//(safe areas = notches and rounded corners of the phone)
+const probe = document.createElement("div")
+probe.style.cssText = "position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)"
+document.body.appendChild(probe)
+
 function fitScreen() {
-    const maxScale = isTouch ? 2 : 1
-    const scale = Math.min(window.innerWidth / 900, window.innerHeight / 500, maxScale)
+    const pad = getComputedStyle(probe)
+    const availW = window.innerWidth - parseFloat(pad.paddingLeft) - parseFloat(pad.paddingRight)
+    const availH = window.innerHeight - parseFloat(pad.paddingTop) - parseFloat(pad.paddingBottom)
+
+    let scale
+    if (isTouch) {
+        //the game uses the full height; the controls take what is left at the sides
+        //(about 29% of the width, between 200 and 260 px in total), so the game gets smaller only if the screen is not wide enough
+        const bands = Math.max(200, Math.min(260, 0.29 * availW))
+        scale = Math.min(availH / 500, (availW - bands) / 900, 2)
+    } else {
+        scale = Math.min(availW / 900, availH / 500, 1)
+    }
+    scale = Math.max(scale, 0.2)
+
     canvas.style.width = `${900 * scale}px`
     canvas.style.height = `${500 * scale}px`
     document.documentElement.style.setProperty("--s", scale.toFixed(3))
@@ -62,6 +81,31 @@ function fitScreen() {
 fitScreen()
 window.addEventListener("resize", fitScreen)
 window.addEventListener("orientationchange", () => setTimeout(fitScreen, 200))
+document.addEventListener("fullscreenchange", () => setTimeout(fitScreen, 100))
+document.addEventListener("webkitfullscreenchange", () => setTimeout(fitScreen, 100))
+
+//full screen (Android and iPad). The iPhone does not allow it in the browser:
+//there the game has to be added to the home screen
+function enterFullscreen() {
+    if (!isTouch) return
+    const element = document.documentElement
+    const request = element.requestFullscreen || element.webkitRequestFullscreen
+    if (!request) return
+
+    try {
+        const result = request.call(element, { navigationUI: "hide" })
+        const lockLandscape = () => {
+            if (screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {})
+        }
+        if (result && result.then) result.then(lockLandscape).catch(() => {})
+        else lockLandscape()
+    } catch (error) { /* it is optional */ }
+}
+
+const isIphone = /iPhone|iPod/.test(navigator.userAgent)
+const isStandalone = window.navigator.standalone === true || window.matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches
+if (isIphone) document.documentElement.classList.add("ios")
+if (isStandalone) document.documentElement.classList.add("standalone")
 
 //a phone held upright: the game waits until it is turned sideways
 const portraitQuery = window.matchMedia("(orientation: portrait)")

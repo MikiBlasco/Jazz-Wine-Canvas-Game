@@ -11,10 +11,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Jazz & Wine</title>
-    <link rel="stylesheet" href="styles/style.css?v=15">
+    <link rel="stylesheet" href="styles/style.css?v=16">
     <script>
         //if something fails, a small red message shows what (so it can be reported)
-        window.JW_BUILD = "15"
+        window.JW_BUILD = "16"
         window.jwShowError = function (text) {
             try {
                 var box = document.getElementById("jw-error")
@@ -66,15 +66,15 @@
               <h2>Move</h2>
               <div class="row">
                 <span class="keys keys-only"><kbd>&larr;</kbd><kbd>&rarr;</kbd></span>
-                <span class="keys touch-only"><kbd class="pad">&#9664;</kbd><kbd class="pad">&#9654;</kbd></span>
+                <span class="keys touch-only"><kbd class="tkey">&#9664;</kbd><kbd class="tkey">&#9654;</kbd></span>
                 <span class="text keys-only">run left and right</span>
-                <span class="text touch-only">press the left or right side of the pad</span>
+                <span class="text touch-only">press the left or right side</span>
               </div>
               <div class="row">
                 <span class="keys keys-only"><kbd>&uarr;</kbd><kbd class="wide">space</kbd></span>
-                <span class="keys touch-only"><kbd class="pad round">&#9650;</kbd></span>
+                <span class="keys touch-only"><kbd class="tkey round">&#9650;</kbd></span>
                 <span class="text keys-only">jump</span>
-                <span class="text touch-only">press the top, or slide up to it (you can run and jump at once)</span>
+                <span class="text touch-only">press the top to jump</span>
               </div>
             </div>
 
@@ -107,9 +107,11 @@
         </div>
 
         <button id="startButton">Play</button>
+        <div id="options">
         <button id="handButton">Controls: both sides</button>
         <button id="fullscreenButton">&#9974; Full screen</button>
-        <p id="build">version 15</p>
+        </div>
+        <p id="build">version 16</p>
         <p id="ios-hint">For full screen on iPhone: tap <b>Share</b> &rarr; <b>Add to Home Screen</b>, then open Jazz &amp; Wine from there.</p>
 
       </div>
@@ -153,18 +155,18 @@
     <p>Turn your phone sideways<br>to play Jazz &amp; Wine</p>
   </div>
 
-    <script src="js/background.js?v=15"></script>
-    <script src="js/catNinja.js?v=15"></script>
-    <script src="js/cat.js?v=15"></script>
-    <script src="js/bottleBig.js?v=15"></script>
-    <script src="js/runnerCat.js?v=15"></script>
-    <script src="js/bread.js?v=15"></script>
-    <script src="js/effects.js?v=15"></script>
-    <script src="js/tutorial.js?v=15"></script>
-    <script src="js/glass.js?v=15"></script>
-    <script src="js/player.js?v=15"></script>
-    <script src="js/game.js?v=15"></script>
-    <script src="js/index.js?v=15"></script>
+    <script src="js/background.js?v=16"></script>
+    <script src="js/catNinja.js?v=16"></script>
+    <script src="js/cat.js?v=16"></script>
+    <script src="js/bottleBig.js?v=16"></script>
+    <script src="js/runnerCat.js?v=16"></script>
+    <script src="js/bread.js?v=16"></script>
+    <script src="js/effects.js?v=16"></script>
+    <script src="js/tutorial.js?v=16"></script>
+    <script src="js/glass.js?v=16"></script>
+    <script src="js/player.js?v=16"></script>
+    <script src="js/game.js?v=16"></script>
+    <script src="js/index.js?v=16"></script>
 
 
 

@@ -378,7 +378,7 @@ html.touch #handButton {
     html.touch #handButton { padding: 4px 12px; font-size: 12px; }
 }
 
-kbd.pad { min-width: 40px; }
+kbd.tkey { min-width: 40px; }
 kbd.round { flex: none; width: 36px; min-width: 0; padding: 0; border-radius: 50%; }
 
 .touch-only { display: none; }
@@ -433,7 +433,7 @@ html.ios:not(.standalone) #ios-hint { display: block; }
     .card p { font-size: 11px; margin-bottom: 3px; }
     kbd { min-width: 26px; height: 24px; font-size: 13px; padding: 0 6px; border-bottom-width: 3px; }
     kbd.wide { min-width: 48px; font-size: 11px; }
-    kbd.pad { min-width: 30px; }
+    kbd.tkey { min-width: 30px; }
     kbd.round { width: 26px; }
     .keys { min-width: 80px; }
     .row { margin-bottom: 3px; gap: 8px; }
@@ -473,3 +473,5 @@ html.touch.can-fullscreen #fullscreenButton { display: block; }
 
 
 html.touch .zone { position: relative; }
+
+#options { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }

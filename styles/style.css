@@ -322,7 +322,7 @@ html.touch #screen { flex: none; }
 .pad.on { background: rgba(255, 213, 74, 0.55); color: #2a0f00; }
 
 kbd.pad { min-width: 40px; }
-kbd.round { border-radius: 50%; min-width: 36px; }
+kbd.round { flex: none; width: 36px; min-width: 0; padding: 0; border-radius: 50%; }
 
 .touch-only { display: none; }
 html.touch .touch-only { display: flex; }
@@ -377,7 +377,7 @@ html.ios:not(.standalone) #ios-hint { display: block; }
     kbd { min-width: 26px; height: 24px; font-size: 13px; padding: 0 6px; border-bottom-width: 3px; }
     kbd.wide { min-width: 48px; font-size: 11px; }
     kbd.pad { min-width: 30px; }
-    kbd.round { min-width: 26px; }
+    kbd.round { width: 26px; }
     .keys { min-width: 80px; }
     .row { margin-bottom: 3px; gap: 8px; }
     .row .text { font-size: 12px; }
@@ -387,4 +387,27 @@ html.ios:not(.standalone) #ios-hint { display: block; }
     .items b { font-size: 14px; }
     .items small { font-size: 9px; }
     #startButton { width: 170px; padding: 7px 14px; font-size: 18px; }
+}
+
+
+/* ===================== Full screen button (cover, touch screens) ===================== */
+
+#fullscreenButton {
+    display: none;
+    padding: 8px 18px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: bold;
+    color: #ffd54a;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1.5px solid rgba(255, 213, 74, 0.7);
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+#fullscreenButton:active { background: rgba(255, 213, 74, 0.3); }
+html.touch.can-fullscreen #fullscreenButton { display: block; }
+
+@media (max-height: 560px) {
+    #fullscreenButton { padding: 5px 14px; font-size: 13px; }
 }

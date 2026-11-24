@@ -86,8 +86,33 @@ document.addEventListener("webkitfullscreenchange", () => setTimeout(fitScreen, 
 
 //full screen (Android and iPad). The iPhone does not allow it in the browser:
 //there the game has to be added to the home screen
+const fullscreenButton = document.getElementById("fullscreenButton")
+const canFullscreen = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)
+if (canFullscreen) document.documentElement.classList.add("can-fullscreen")
+
+function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement)
+}
+
+function updateFullscreenButton() {
+    fullscreenButton.innerHTML = isFullscreen() ? "&#9974; Exit full screen" : "&#9974; Full screen"
+}
+document.addEventListener("fullscreenchange", updateFullscreenButton)
+document.addEventListener("webkitfullscreenchange", updateFullscreenButton)
+
+//the button of the cover: full screen on or off, before pressing Play
+fullscreenButton.addEventListener("click", () => {
+    if (isFullscreen()) {
+        const exit = document.exitFullscreen || document.webkitExitFullscreen
+        if (exit) exit.call(document)
+    } else {
+        enterFullscreen()
+    }
+})
+
+//Play also asks for it, if it was not asked before
 function enterFullscreen() {
-    if (!isTouch) return
+    if (!isTouch || isFullscreen()) return
     const element = document.documentElement
     const request = element.requestFullscreen || element.webkitRequestFullscreen
     if (!request) return
@@ -278,3 +303,9 @@ const cat2 = new Audio ("audio/cat3.wav")
 
 
 
+
+
+//offline copy + always the newest version
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {})
+}

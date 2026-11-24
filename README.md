@@ -16,6 +16,7 @@ this is a game where:
 - The goal is to get to 100 points: a bar at the top shows how close you are. When you win, the dog does a somersault.
 - The normal cats fall faster as the score goes up (from 70 points), and there are fewer of them at the end.
 - If you get 0 points you gill get Game Over.
-- An upcoming feature will be a clock that will set a limit of time so it will add complexity to the game.
+- Every level has a clock: if it runs out before you reach the next level, you lose.
+- It also works on phones and tablets held sideways: on-screen buttons (a left/right pad and a jump button) appear on touch screens.
 
 

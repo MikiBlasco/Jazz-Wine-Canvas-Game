@@ -42,9 +42,84 @@ startButton.onclick = ()=> {
     outCanvas.classList.toggle("hidden")
     startButton.textContent = "!Speed Up!"
     startButton.blur();
+    fitScreen()
+    checkOrientation()
     game.start();
     
 };
+
+//Touch controls and screen size----------------------------------------------------------------------
+const isTouch = document.documentElement.classList.contains("touch")
+
+//the game is 900x500 inside; it is scaled to fit any screen
+function fitScreen() {
+    const maxScale = isTouch ? 2 : 1
+    const scale = Math.min(window.innerWidth / 900, window.innerHeight / 500, maxScale)
+    canvas.style.width = `${900 * scale}px`
+    canvas.style.height = `${500 * scale}px`
+    document.documentElement.style.setProperty("--s", scale.toFixed(3))
+}
+fitScreen()
+window.addEventListener("resize", fitScreen)
+window.addEventListener("orientationchange", () => setTimeout(fitScreen, 200))
+
+//a phone held upright: the game waits until it is turned sideways
+const portraitQuery = window.matchMedia("(orientation: portrait)")
+function checkOrientation() {
+    game.paused = isTouch && portraitQuery.matches
+    if (game.paused) {
+        keys.left = false
+        keys.right = false
+        updateVelocity()
+    }
+}
+portraitQuery.addEventListener("change", checkOrientation)
+
+//the left and right arrows work as one pad, so the thumb can slide from one to the other
+const dpad = document.getElementById("dpad")
+const padLeft = document.getElementById("padLeft")
+const padRight = document.getElementById("padRight")
+
+function padPress(event) {
+    const rect = dpad.getBoundingClientRect()
+    const goesLeft = event.clientX < rect.left + rect.width / 2
+    keys.left = goesLeft
+    keys.right = !goesLeft
+    padLeft.classList.toggle("on", goesLeft)
+    padRight.classList.toggle("on", !goesLeft)
+    updateVelocity()
+}
+
+function padRelease() {
+    keys.left = false
+    keys.right = false
+    padLeft.classList.remove("on")
+    padRight.classList.remove("on")
+    updateVelocity()
+}
+
+dpad.addEventListener("pointerdown", event => {
+    event.preventDefault()
+    dpad.setPointerCapture(event.pointerId)
+    padPress(event)
+})
+dpad.addEventListener("pointermove", event => {
+    if (dpad.hasPointerCapture(event.pointerId)) padPress(event)
+})
+;["pointerup", "pointercancel", "lostpointercapture"].forEach(type => dpad.addEventListener(type, padRelease))
+
+//the jump button
+const jumpButton = document.getElementById("btnJump")
+jumpButton.addEventListener("pointerdown", event => {
+    event.preventDefault()
+    jumpButton.classList.add("on")
+    if (!game.winning && !game.paused) player.jump()
+})
+;["pointerup", "pointercancel", "pointerleave"].forEach(type =>
+    jumpButton.addEventListener(type, () => jumpButton.classList.remove("on")))
+
+//no menu when pressing for a long time
+document.addEventListener("contextmenu", event => { if (isTouch) event.preventDefault() })
 
 //Play again---------------------------------------------------------------------------------------------
 const playAgainButton = document.getElementById("playAgain")
@@ -96,6 +171,7 @@ function restartGame() {
     keys.left = false
     keys.right = false
     player.vx = 0
+    checkOrientation()
     game.start()
 }
 

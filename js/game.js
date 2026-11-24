@@ -10,6 +10,12 @@ class Game {
         this.runnerCat = runnerCat;
         this.bread = bread;
         this.frameNumber = 0;
+
+        //fixed 60 steps per second, whatever the refresh rate of the screen (60, 90, 120 Hz...)
+        this.clock = 0          // steps since the start (used to time the spawns)
+        this.lastTime = null
+        this.accumulated = 0
+        this.paused = false
         this.x;
         this.y;
         this.score = 10
@@ -91,18 +97,42 @@ class Game {
         this.play()
     }
 
-    play(){
+    play(timestamp){
 
         if(this.frameNumber !== null) {
             this.frameNumber = requestAnimationFrame(this.play.bind(this));
         }
 
-        this.tick()
+        this.advance(timestamp === undefined ? performance.now() : timestamp)
+    }
+
+    //runs as many fixed steps (1/60 s) as the real time asks for; returns how many it ran
+    advance(timestamp){
+        const step = 1000 / 60
+
+        if (this.lastTime === null || this.paused) {
+            this.lastTime = timestamp
+            return 0
+        }
+
+        //after a pause or a hidden tab there is no jump forward
+        this.accumulated += Math.min(timestamp - this.lastTime, 100)
+        this.lastTime = timestamp
+
+        let steps = 0
+        while (this.accumulated >= step - 2 && steps < 3) {
+            this.accumulated = Math.max(0, this.accumulated - step)
+            steps++
+            this.tick()
+            if (this.frameNumber === null) break
+        }
+        return steps
     }
 
     //everything that happens in one frame
     tick(){
         this.ticks++
+        this.clock++
 
         if (this.winning) {
             this.playWin()
@@ -140,10 +170,10 @@ class Game {
             return
         }
 
-        this.cat.generate(this.effectiveScore(), this.frameNumber)
-        this.catNinja.generate(this.effectiveScore(), this.frameNumber)
-        this.glass.generate(this.frameNumber)
-        this.bottleBig.generate(this.effectiveScore(), this.frameNumber)
+        this.cat.generate(this.effectiveScore(), this.clock)
+        this.catNinja.generate(this.effectiveScore(), this.clock)
+        this.glass.generate(this.clock)
+        this.bottleBig.generate(this.effectiveScore(), this.clock)
         this.runnerCat.generate(this.effectiveScore(), this.player.x + this.player.width / 2)
         this.bread.generate(this.effectiveScore())
     }

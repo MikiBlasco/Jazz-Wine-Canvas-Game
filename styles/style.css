@@ -5,6 +5,8 @@
 body {
     margin: 0;
     min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
     font-family: 'Courier New', Courier, monospace;
     font-size: 16px;
     color: #e9dff7;
@@ -15,6 +17,7 @@ body {
 
 #general {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -33,15 +36,18 @@ canvas {
     border-radius: 30px;
 }
 
+/* --s is the size of the game on this screen (1 = 900x500 pixels) */
+:root { --s: 1; }
+
 #playAgain {
     position: absolute;
     left: 50%;
-    top: 330px;
+    top: 66%;
     transform: translateX(-50%);
-    width: 220px;
-    padding: 12px 16px;
+    width: calc(220px * var(--s));
+    padding: calc(12px * var(--s)) calc(16px * var(--s));
     font-family: inherit;
-    font-size: 22px;
+    font-size: calc(22px * var(--s));
     font-weight: bold;
     color: #fff7e0;
     background: linear-gradient(180deg, #b3123f 0%, #6b0a26 100%);
@@ -248,4 +254,126 @@ kbd.wide { min-width: 64px; font-size: 13px; }
     0%   { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), 0 0 0 0 rgba(255, 213, 74, 0.55); }
     70%  { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), 0 0 0 16px rgba(255, 213, 74, 0); }
     100% { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), 0 0 0 0 rgba(255, 213, 74, 0); }
+}
+
+
+/* ===================== Touch controls ===================== */
+
+#touch-controls { display: none; }
+
+html.touch body {
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+html.touch #in-canvas,
+html.touch #touch-controls { touch-action: none; }
+
+html.touch #touch-controls { display: block; }
+
+#dpad, #btnJump {
+    position: absolute;
+    bottom: 5%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.16);
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    touch-action: none;
+}
+
+#dpad {
+    left: max(2%, env(safe-area-inset-left));
+    width: max(150px, calc(230px * var(--s)));
+    height: max(64px, calc(92px * var(--s)));
+    border-radius: 999px;
+}
+
+#dpad span {
+    flex: 1;
+    text-align: center;
+    font-size: max(26px, calc(40px * var(--s)));
+    border-radius: 999px;
+    padding: 4px 0;
+    pointer-events: none;
+}
+
+#dpad span.on { background: rgba(255, 213, 74, 0.55); color: #2a0f00; }
+
+#btnJump {
+    right: max(3%, env(safe-area-inset-right));
+    width: max(76px, calc(110px * var(--s)));
+    height: max(76px, calc(110px * var(--s)));
+    border-radius: 50%;
+    font-size: max(30px, calc(46px * var(--s)));
+}
+
+#btnJump.on { background: rgba(255, 213, 74, 0.55); color: #2a0f00; }
+
+kbd.pad { min-width: 40px; }
+kbd.round { border-radius: 50%; min-width: 36px; }
+
+.touch-only { display: none; }
+html.touch .touch-only { display: flex; }
+html.touch .keys-only { display: none; }
+
+/* ===================== Turn the phone ===================== */
+
+#rotate {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    background: #12082b;
+    color: #ffd54a;
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+#rotate .phone { font-size: 80px; animation: turnPhone 2.4s ease-in-out infinite; }
+#rotate p { margin: 0; }
+
+@keyframes turnPhone {
+    0%, 25%   { transform: rotate(0deg); }
+    60%, 100% { transform: rotate(-90deg); }
+}
+
+@media (orientation: portrait) {
+    html.touch #rotate { display: flex; }
+}
+
+/* ===================== Cover on short screens (phone held sideways) ===================== */
+
+@media (max-height: 560px) {
+    #cover { padding: 8px 16px; gap: 6px; }
+    #cover h1 { font-size: 2.1em; filter: drop-shadow(0 2px 0 #490101); }
+    #tagline { display: none; }
+    #cover-body { gap: 18px; flex-wrap: nowrap; }
+    #jazz { width: 120px; border-width: 3px; box-shadow: 0 0 0 3px #490101, 0 6px 14px rgba(0, 0, 0, 0.6); }
+    #howto { gap: 6px; grid-template-columns: repeat(2, minmax(190px, 1fr)); max-width: 580px; }
+    .card { padding: 6px 10px 8px; border-radius: 12px; }
+    .card h2 { font-size: 11px; margin-bottom: 3px; letter-spacing: 1px; }
+    .card p { font-size: 11px; margin-bottom: 3px; }
+    kbd { min-width: 26px; height: 24px; font-size: 13px; padding: 0 6px; border-bottom-width: 3px; }
+    kbd.wide { min-width: 48px; font-size: 11px; }
+    kbd.pad { min-width: 30px; }
+    kbd.round { min-width: 26px; }
+    .keys { min-width: 80px; }
+    .row { margin-bottom: 3px; gap: 8px; }
+    .row .text { font-size: 12px; }
+    .items img { height: 28px; }
+    #glass { height: 28px; }
+    #catNinja, #catRun { height: 24px; }
+    .items b { font-size: 14px; }
+    .items small { font-size: 9px; }
+    #startButton { width: 170px; padding: 7px 14px; font-size: 18px; }
 }

@@ -295,14 +295,16 @@ html.touch #zone-right {
 }
 
 html.touch.hand-right #zone-right,
-html.touch.hand-left #zone-left { display: block; }
+html.touch.hand-left #zone-left,
+html.touch.hand-both #zone-left,
+html.touch.hand-both #zone-right { display: block; }
 
 html.touch #screen { flex: none; }
 
 /* ---- the joystick ---- */
-#stick { display: none; }
+.stick { display: none; }
 
-html.touch #stick {
+html.touch .stick {
     display: block;
     position: fixed;
     width: 96px;
@@ -317,20 +319,20 @@ html.touch #stick {
     transition: opacity 0.15s;
 }
 
-#stick.idle { opacity: 0.55; }
-#stick.active { opacity: 1; background: rgba(255, 255, 255, 0.18); }
+.stick.idle { opacity: 0.55; }
+.stick.active { opacity: 1; background: rgba(255, 255, 255, 0.18); }
 
-#stick .mark {
+.stick .mark {
     position: absolute;
     color: rgba(255, 255, 255, 0.7);
     font-size: 15px;
     line-height: 1;
 }
-#stick .mark.up    { left: 50%; top: 5px; transform: translateX(-50%); }
-#stick .mark.left  { left: 6px; top: 50%; transform: translateY(-50%); }
-#stick .mark.right { right: 6px; top: 50%; transform: translateY(-50%); }
+.stick .mark.up    { left: 50%; top: 5px; transform: translateX(-50%); }
+.stick .mark.left  { left: 6px; top: 50%; transform: translateY(-50%); }
+.stick .mark.right { right: 6px; top: 50%; transform: translateY(-50%); }
 
-#knob {
+.knob {
     position: absolute;
     left: 50%;
     top: 50%;

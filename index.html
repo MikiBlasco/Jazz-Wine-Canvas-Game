@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Jazz & Wine</title>
-    <link rel="stylesheet" href="styles/style.css?v=11">
+    <link rel="stylesheet" href="styles/style.css?v=12">
     <script>
         //phones and tablets: touch buttons instead of the keyboard
         if (window.matchMedia("(pointer: coarse)").matches || "ontouchstart" in window) {
@@ -84,7 +84,7 @@
         </div>
 
         <button id="startButton">Play</button>
-        <button id="handButton">Joystick: right hand</button>
+        <button id="handButton">Joystick: both sides</button>
         <button id="fullscreenButton">&#9974; Full screen</button>
         <p id="ios-hint">For full screen on iPhone: tap <b>Share</b> &rarr; <b>Add to Home Screen</b>, then open Jazz &amp; Wine from there.</p>
 
@@ -96,21 +96,27 @@
     <div id="in-canvas" class="hidden">
 
       <!-- the joystick lives OUTSIDE the game, in a band at one side (left or right hand) -->
-      <div id="zone-left" class="zone"></div>
+      <div id="zone-left" class="zone">
+        <div class="stick idle">
+          <span class="mark up">&#9650;</span>
+          <span class="mark left">&#9664;</span>
+          <span class="mark right">&#9654;</span>
+          <div class="knob"></div>
+        </div>
+      </div>
 
       <div id="screen">
         <canvas id="canvas" width="900" height="500"></canvas>
         <button id="playAgain" class="hidden">Play again</button>
       </div>
 
-      <div id="zone-right" class="zone"></div>
-
-      <!-- the joystick: it appears where the thumb touches -->
-      <div id="stick" class="idle">
-        <span class="mark up">&#9650;</span>
-        <span class="mark left">&#9664;</span>
-        <span class="mark right">&#9654;</span>
-        <div id="knob"></div>
+      <div id="zone-right" class="zone">
+        <div class="stick idle">
+          <span class="mark up">&#9650;</span>
+          <span class="mark left">&#9664;</span>
+          <span class="mark right">&#9654;</span>
+          <div class="knob"></div>
+        </div>
       </div>
 
     </div>
@@ -123,18 +129,18 @@
     <p>Turn your phone sideways<br>to play Jazz &amp; Wine</p>
   </div>
 
-    <script src="js/background.js?v=11"></script>
-    <script src="js/catNinja.js?v=11"></script>
-    <script src="js/cat.js?v=11"></script>
-    <script src="js/bottleBig.js?v=11"></script>
-    <script src="js/runnerCat.js?v=11"></script>
-    <script src="js/bread.js?v=11"></script>
-    <script src="js/effects.js?v=11"></script>
-    <script src="js/tutorial.js?v=11"></script>
-    <script src="js/glass.js?v=11"></script>
-    <script src="js/player.js?v=11"></script>
-    <script src="js/game.js?v=11"></script>
-    <script src="js/index.js?v=11"></script>
+    <script src="js/background.js?v=12"></script>
+    <script src="js/catNinja.js?v=12"></script>
+    <script src="js/cat.js?v=12"></script>
+    <script src="js/bottleBig.js?v=12"></script>
+    <script src="js/runnerCat.js?v=12"></script>
+    <script src="js/bread.js?v=12"></script>
+    <script src="js/effects.js?v=12"></script>
+    <script src="js/tutorial.js?v=12"></script>
+    <script src="js/glass.js?v=12"></script>
+    <script src="js/player.js?v=12"></script>
+    <script src="js/game.js?v=12"></script>
+    <script src="js/index.js?v=12"></script>
 
 
 

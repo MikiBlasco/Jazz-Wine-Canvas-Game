@@ -15,8 +15,9 @@ class Bread {
         this.width = 76;
         this.height = 40;
 
-        //it falls much faster than anything else (the big cat falls at 3.9)
-        this.vy = 7.5;
+        //it falls faster than anything else (the big cat falls at 3.9),
+        //but slow enough to see it coming
+        this.vy = 5.5;
 
         //a bread appears the first time the score reaches each of these numbers,
         //so there are only 5 in the whole game
@@ -28,19 +29,23 @@ class Bread {
         if (this.next >= this.milestones.length) return
 
         if (score >= this.milestones[this.next]) {
-            this.breads.push({
-                x: Math.floor(Math.random() * (this.ctx.canvas.width - this.width)),
-                y: -this.height,
-                width: this.width,
-                height: this.height,
-                age: 0
-            })
+            this.spawnAt(Math.floor(Math.random() * (this.ctx.canvas.width - this.width)))
 
             //if the score is already beyond the following numbers, skip them
             while (this.next < this.milestones.length && this.milestones[this.next] <= score) {
                 this.next++
             }
         }
+    }
+
+    spawnAt(x) {
+        this.breads.push({
+            x: x,
+            y: -this.height,
+            width: this.width,
+            height: this.height,
+            age: 0
+        })
     }
 
     move() {
@@ -58,6 +63,15 @@ class Bread {
             const t = bread.age * 0.1
             const cx = bread.x + bread.width / 2
             const cy = bread.y + bread.height / 2
+
+            //a golden trail above the bread, to follow it with the eyes
+            const trail = this.ctx.createLinearGradient(0, bread.y - 110, 0, bread.y + 10)
+            trail.addColorStop(0, "rgba(255, 220, 90, 0)")
+            trail.addColorStop(1, "rgba(255, 220, 90, 0.55)")
+            this.ctx.save()
+            this.ctx.fillStyle = trail
+            this.ctx.fillRect(bread.x + 12, bread.y - 110, bread.width - 24, 120)
+            this.ctx.restore()
 
             //golden halo
             const radius = 70 + 8 * Math.sin(t * 2)

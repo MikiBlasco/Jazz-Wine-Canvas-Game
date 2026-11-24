@@ -31,26 +31,27 @@ class Cat {
         return Math.min(4, 2 + (score - 80) * 0.1)           // from 2 to 4
     }
 
-    spawn(score) {
-        const x = Math.floor((Math.random() * (this.ctx.canvas.width - 35)))
+    //x is optional: the tutorial chooses where the cat falls
+    spawn(score, x) {
+        if (x === undefined) {
+            x = Math.floor((Math.random() * (this.ctx.canvas.width - 35)))
+        }
         const newCat = new Cat(ctx, x, -10)
         newCat.vy = this.fallSpeed(score)
         this.cats.push(newCat)
     }
 
+    //Fewer normal cats than before (there were too many at some moments):
+    //one every 5 seconds at the beginning, then a bit more often.
     generate(score, frameNumber) {
 
-        if (frameNumber <= 50) return
+        if (frameNumber <= 50 || score <= 0) return
 
-        //at the beginning a cat every 320 frames
-        if (score > 0 && score < 30 && frameNumber % 320 === 0) this.spawn(score)
+        let every = 300
+        if (score >= 40) every = 260
+        if (score >= 80) every = 210
 
-        //from 20 to 70 points a cat every 180 frames
-        if (score > 20 && score < 70 && frameNumber % 180 === 0) this.spawn(score)
-
-        //the last two screens have fewer cats than before, but they fall faster
-        if (score >= 70 && score < 80 && frameNumber % 220 === 0) this.spawn(score)
-        if (score >= 80 && frameNumber % 150 === 0) this.spawn(score)
+        if (frameNumber % every === 0) this.spawn(score)
    }
 
    checkCollision(){

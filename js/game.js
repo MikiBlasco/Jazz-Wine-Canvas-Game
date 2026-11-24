@@ -20,6 +20,15 @@ class Game {
         //victory sequence
         this.winning = false
         this.winFrames = 0
+
+        //floating points, crumbs and flashes
+        this.effects = new Effects(ctx)
+
+        //hidden tutorial in the first screen
+        this.tutorial = new Tutorial()
+
+        //frames since the start (for the pulsing effects)
+        this.ticks = 0
     }
 
     start(){
@@ -31,6 +40,13 @@ class Game {
         if(this.frameNumber !== null) {
             this.frameNumber = requestAnimationFrame(this.play.bind(this));
         }
+
+        this.tick()
+    }
+
+    //everything that happens in one frame
+    tick(){
+        this.ticks++
 
         if (this.winning) {
             this.playWin()
@@ -46,6 +62,9 @@ class Game {
         this.drawScore();
         this.drawLevel(); 
         this.drawProgressBar();
+        this.drawDanger();
+        this.effects.update();
+        this.effects.draw();
         this.background.backgroundChange(this.score);
         this.GameOver();       
     }
@@ -59,6 +78,12 @@ class Game {
     }
 
     generateSecondarys(){
+        //at the beginning the tutorial decides what falls
+        if (this.tutorial.active) {
+            this.tutorial.update(this)
+            return
+        }
+
         this.cat.generate(this.score, this.frameNumber)
         this.catNinja.generate(this.score, this.frameNumber)
         this.glass.generate(this.frameNumber)
@@ -106,6 +131,9 @@ class Game {
     }
     
     updateScore(){
+
+        const before = this.score
+        let ateBread = false
         
         if (this.glass.checkCollision() === true){ 
             this.score += 2
@@ -146,8 +174,36 @@ class Game {
         //special bread: twice the points of a bottle
         if (this.bread.collect(this.player) > 0) {
             this.score += 10
+            ateBread = true
             bigBottle5.play()
             bigBottle6.play()
+        }
+
+        //in the tutorial the dog cannot die
+        if (this.tutorial.active && this.score < 3) {
+            this.score = 3
+        }
+
+        this.showScoreChange(this.score - before, ateBread)
+    }
+
+    //points that float over the dog, a flash when it is hurt, and the bread animation
+    showScoreChange(change, ateBread){
+        if (change === 0) return
+
+        const dogX = this.player.x + this.player.width / 2
+        const dogY = this.player.y - 6
+
+        if (ateBread) {
+            this.player.eat()
+            this.effects.burstCrumbs(this.player.x + this.player.width * 0.25, this.player.y + this.player.height * 0.35)
+            this.effects.popup("Yum! +10", dogX, dogY - 14, "#ffd54a")
+        } else if (change > 0) {
+            this.effects.popup(`+${change}`, dogX, dogY, "#7dff8a")
+        } else {
+            this.effects.popup(`${change}`, dogX, dogY, "#ff6b6b")
+            this.effects.damage()
+            this.player.hurt()
         }
     }
     
@@ -279,10 +335,12 @@ class Game {
     }
 
     //-------------------------------------------------------------- progress bar
-    //A bar at the top that fills up until the 100 points of the goal.
+    //The score is also the life of the dog. The bar goes from a skull (0 points:
+    //game over) to a star (100 points: you win). Near the skull the bar turns red
+    //and pulses, so it is clear how close the dog is to losing.
     drawProgressBar(){
         const ctx = this.ctx
-        const x = 40, y = 14, w = 740, h = 18, r = 9
+        const x = 84, y = 14, w = 696, h = 18, r = 9
         const goal = 100
 
         //it moves smoothly instead of jumping
@@ -290,6 +348,10 @@ class Game {
         this.displayScore += (target - this.displayScore) * 0.12
         if (Math.abs(target - this.displayScore) < 0.05) this.displayScore = target
         const progress = this.displayScore / goal
+
+        //0 when the dog is safe, 1 when it is about to die
+        const danger = this.dangerLevel()
+        const pulse = 0.5 + 0.5 * Math.sin(this.ticks * 0.25)
 
         const roundRect = (rx, ry, rw, rh, rr) => {
             ctx.beginPath()
@@ -307,6 +369,14 @@ class Game {
         roundRect(x, y, w, h, r)
         ctx.fillStyle = "rgba(10, 0, 30, 0.5)"
         ctx.fill()
+
+        //danger zone: the first 15 points are tinted red
+        ctx.save()
+        roundRect(x, y, w, h, r)
+        ctx.clip()
+        ctx.fillStyle = `rgba(255, 40, 40, ${0.22 + 0.25 * danger * pulse})`
+        ctx.fillRect(x, y, w * 15 / goal, h)
+        ctx.restore()
 
         //full part: from wine red to gold
         if (progress > 0) {
@@ -337,13 +407,18 @@ class Game {
             ctx.stroke()
         })
 
-        //border
+        //border (it pulses red when the dog is in danger)
         roundRect(x, y, w, h, r)
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.85)"
-        ctx.lineWidth = 2
+        ctx.strokeStyle = danger > 0
+            ? `rgba(255, ${Math.round(255 - 190 * danger * pulse)}, ${Math.round(255 - 190 * danger * pulse)}, 0.95)`
+            : "rgba(255, 255, 255, 0.85)"
+        ctx.lineWidth = 2 + 1.5 * danger * pulse
         ctx.stroke()
 
-        //goal: a star and the number 100
+        //left end: a skull (this is where you lose)
+        this.drawSkull(52, y + h / 2, danger, pulse)
+
+        //right end: a star and the number 100 (this is where you win)
         const sx = x + w + 26, sy = y + h / 2
         ctx.fillStyle = progress >= 0.8 ? "#ffd54a" : "rgba(255, 255, 255, 0.85)"
         ctx.strokeStyle = "#3a2a00"
@@ -368,6 +443,72 @@ class Game {
 
         ctx.restore()
     }
-}
 
-           
+    //a small skull; it gets red and shakes when the dog is about to die
+    drawSkull(cx, cy, danger, pulse){
+        const ctx = this.ctx
+        ctx.save()
+        ctx.translate(cx + (danger > 0.3 ? Math.sin(this.ticks * 1.7) * 1.5 * danger : 0), cy)
+        const s = 1 + 0.18 * danger * pulse
+        ctx.scale(s, s)
+
+        ctx.fillStyle = danger > 0 ? `rgb(255, ${Math.round(245 - 150 * danger)}, ${Math.round(235 - 160 * danger)})` : "#f4f0e8"
+        ctx.strokeStyle = "#2a1010"
+        ctx.lineWidth = 2
+
+        //head and jaw
+        ctx.beginPath()
+        ctx.arc(0, -2, 11, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.rect(-6, 6, 12, 7)
+        ctx.fill()
+        ctx.stroke()
+
+        //eyes and nose
+        ctx.fillStyle = "#2a1010"
+        ctx.beginPath()
+        ctx.arc(-4.5, -3, 3, 0, Math.PI * 2)
+        ctx.arc(4.5, -3, 3, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.beginPath()
+        ctx.moveTo(0, 1)
+        ctx.lineTo(-1.8, 4.5)
+        ctx.lineTo(1.8, 4.5)
+        ctx.closePath()
+        ctx.fill()
+
+        //teeth
+        ctx.lineWidth = 1.3
+        ctx.beginPath()
+        ctx.moveTo(-2, 6); ctx.lineTo(-2, 13)
+        ctx.moveTo(2, 6); ctx.lineTo(2, 13)
+        ctx.stroke()
+
+        ctx.restore()
+    }
+
+    //how close the dog is to dying: 0 above 15 points, 1 at 0 points
+    dangerLevel(){
+        return Math.max(0, Math.min(1, (15 - this.displayScore) / 15))
+    }
+
+    //red glow around the screen when the dog is in danger
+    drawDanger(){
+        const danger = this.dangerLevel()
+        if (danger <= 0) return
+
+        const ctx = this.ctx
+        const w = ctx.canvas.width, h = ctx.canvas.height
+        const pulse = 0.65 + 0.35 * Math.sin(this.ticks * 0.15)
+
+        ctx.save()
+        const glow = ctx.createRadialGradient(w / 2, h / 2, h * 0.35, w / 2, h / 2, h * 1.0)
+        glow.addColorStop(0, "rgba(200, 0, 0, 0)")
+        glow.addColorStop(1, `rgba(200, 0, 0, ${0.62 * danger * pulse})`)
+        ctx.fillStyle = glow
+        ctx.fillRect(0, 0, w, h)
+        ctx.restore()
+    }
+}

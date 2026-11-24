@@ -22,6 +22,13 @@ class Player {
         this.jumpSpeed = 16.5;
         this.gravity = 0.62;
 
+        //hurt: the dog blinks for a moment
+        this.hurtFrames = 0;
+
+        //eating the golden bread: a chewing animation
+        this.eatFrames = 0;
+        this.eatDuration = 44;
+
         //victory somersault
         this.flipping = false;
         this.flipFrame = 0;
@@ -59,24 +66,61 @@ class Player {
         }
     }
 
+    hurt() {
+        this.hurtFrames = 36
+    }
+
+    eat() {
+        this.eatFrames = this.eatDuration
+    }
+
     draw() {
-        if (this.flipAngle !== 0) {
-            //turning around the center of the dog
-            this.ctx.save()
-            this.ctx.translate(this.x + this.width / 2, this.y + this.height / 2)
-            this.ctx.rotate(this.flipAngle)
-            this.ctx.drawImage(this.img, -this.width / 2, -this.height / 2, this.width, this.height)
-            this.ctx.restore()
-            return
+        const ctx = this.ctx
+
+        //blinking when hurt
+        let alpha = 1
+        if (this.hurtFrames > 0) {
+            this.hurtFrames--
+            alpha = Math.floor(this.hurtFrames / 4) % 2 === 0 ? 0.35 : 1
         }
 
-        this.ctx.drawImage(
-            this.img,
-            this.x,
-            this.y,
-            this.width,
-            this.height
-        );
+        //chewing: the dog gets wider and shorter three times, with a golden glow
+        let scaleX = 1, scaleY = 1, glow = 0
+        if (this.eatFrames > 0) {
+            const t = (this.eatDuration - this.eatFrames) / this.eatDuration
+            const pulse = Math.sin(t * Math.PI * 6)
+            scaleX = 1 + 0.10 * pulse
+            scaleY = 1 - 0.12 * pulse
+            glow = 1 - t
+            this.eatFrames--
+        }
+
+        ctx.save()
+        ctx.globalAlpha = alpha
+
+        if (glow > 0) {
+            const cx = this.x + this.width / 2
+            const cy = this.y + this.height / 2
+            const aura = ctx.createRadialGradient(cx, cy, 10, cx, cy, 95)
+            aura.addColorStop(0, `rgba(255, 224, 110, ${0.75 * glow})`)
+            aura.addColorStop(1, "rgba(255, 224, 110, 0)")
+            ctx.fillStyle = aura
+            ctx.fillRect(cx - 95, cy - 95, 190, 190)
+        }
+
+        if (this.flipAngle !== 0) {
+            //turning around the center of the dog
+            ctx.translate(this.x + this.width / 2, this.y + this.height / 2)
+            ctx.rotate(this.flipAngle)
+            ctx.drawImage(this.img, -this.width / 2, -this.height / 2, this.width, this.height)
+        } else {
+            //the dog is scaled from its feet
+            ctx.translate(this.x + this.width / 2, this.y + this.height)
+            ctx.scale(scaleX, scaleY)
+            ctx.drawImage(this.img, -this.width / 2, -this.height, this.width, this.height)
+        }
+
+        ctx.restore()
     }
 
     //A jump with a full forward somersault (the dog looks to the left,

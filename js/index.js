@@ -44,6 +44,7 @@ startButton.onclick = ()=> {
     startButton.blur();
     enterFullscreen()
     fitScreen()
+    placeIdleStick()
     checkOrientation()
     game.start();
     
@@ -66,8 +67,10 @@ function fitScreen() {
     let scale
     if (isTouch) {
         //the game uses the full height; the controls take what is left at the sides
-        //(about 24% of the width, between 170 and 220 px in total), so the game gets smaller only if the screen is not wide enough
-        const bands = Math.max(170, Math.min(220, 0.24 * availW))
+        //(one band for the joystick, 15% of the width, between 120 and 160 px), so the game gets smaller only if the screen is not wide enough
+        const band = Math.max(120, Math.min(160, 0.15 * availW))
+        document.documentElement.style.setProperty('--band', `${band}px`)
+        const bands = band
         scale = Math.min(availH / 500, (availW - bands) / 900, 2)
     } else {
         scale = Math.min(availW / 900, availH / 500, 1)
@@ -144,34 +147,122 @@ function checkOrientation() {
 }
 portraitQuery.addEventListener("change", checkOrientation)
 
-//each side of the screen has its own buttons: direction below, jump above
-function holdButton(button, onPress, onRelease) {
-    button.addEventListener("pointerdown", event => {
-        event.preventDefault()
-        button.setPointerCapture(event.pointerId)
-        button.classList.add("on")
-        onPress()
-    })
-    ;["pointerup", "pointercancel", "lostpointercapture"].forEach(type =>
-        button.addEventListener(type, () => {
-            if (!button.classList.contains("on")) return
-            button.classList.remove("on")
-            onRelease()
-        }))
+//The joystick: one thumb, on the side of the screen the player chooses.
+//  drag left or right -> the dog runs
+//  slide up           -> the dog jumps (diagonal = run and jump at the same time)
+//It appears where the thumb touches, and follows the thumb if it goes far.
+const HAND_KEY = "jazz-wine-hand"
+function savedHand() {
+    try { return localStorage.getItem(HAND_KEY) === "left" ? "left" : "right" } catch (e) { return "right" }
 }
 
-holdButton(document.getElementById("btnLeft"),
-    () => { keys.left = true; updateVelocity() },
-    () => { keys.left = false; updateVelocity() })
+function setHand(hand) {
+    document.documentElement.classList.toggle("hand-left", hand === "left")
+    document.documentElement.classList.toggle("hand-right", hand !== "left")
+    try { localStorage.setItem(HAND_KEY, hand) } catch (e) { /* it is optional */ }
+    handButton.textContent = hand === "left" ? "Joystick: left hand" : "Joystick: right hand"
+    placeIdleStick()
+    fitScreen()
+}
 
-holdButton(document.getElementById("btnRight"),
-    () => { keys.right = true; updateVelocity() },
-    () => { keys.right = false; updateVelocity() })
+const handButton = document.getElementById("handButton")
+handButton.addEventListener("click", () => setHand(document.documentElement.classList.contains("hand-left") ? "right" : "left"))
 
-;["jumpLeft", "jumpRight"].forEach(id =>
-    holdButton(document.getElementById(id),
-        () => { if (!game.winning && !game.paused) player.jump() },
-        () => {}))
+const stick = document.getElementById("stick")
+const knob = document.getElementById("knob")
+const STICK_RADIUS = 48      // how far the knob goes
+const DEAD_ZONE = 14         // below this the dog does not run
+const JUMP_DISTANCE = 30     // sliding up this much makes the dog jump
+
+let stickPointer = null
+let stickX = 0, stickY = 0   // where the stick is now
+let jumpedWithThisPush = false
+
+function activeZone() {
+    return document.getElementById(document.documentElement.classList.contains("hand-left") ? "zone-left" : "zone-right")
+}
+
+//resting place: low in the middle of its band
+function placeIdleStick() {
+    if (!isTouch) return
+    const rect = activeZone().getBoundingClientRect()
+    if (rect.width === 0) return
+    stickX = rect.left + rect.width / 2
+    stickY = rect.top + rect.height * 0.68
+    stick.style.left = `${stickX}px`
+    stick.style.top = `${stickY}px`
+    knob.style.transform = ""
+}
+
+function stickMove(event) {
+    let dx = event.clientX - stickX
+    let dy = event.clientY - stickY
+
+    //the stick follows the thumb sideways and downwards, so changing direction is quick
+    if (dx > STICK_RADIUS) { stickX = event.clientX - STICK_RADIUS; dx = STICK_RADIUS }
+    if (dx < -STICK_RADIUS) { stickX = event.clientX + STICK_RADIUS; dx = -STICK_RADIUS }
+    if (dy > STICK_RADIUS) { stickY = event.clientY - STICK_RADIUS; dy = STICK_RADIUS }
+    stick.style.left = `${stickX}px`
+    stick.style.top = `${stickY}px`
+
+    keys.left = dx < -DEAD_ZONE
+    keys.right = dx > DEAD_ZONE
+    updateVelocity()
+
+    //jump once for every upward slide
+    if (dy < -JUMP_DISTANCE) {
+        if (!jumpedWithThisPush && !game.winning && !game.paused) player.jump()
+        jumpedWithThisPush = true
+    } else if (dy > -JUMP_DISTANCE / 2) {
+        jumpedWithThisPush = false
+    }
+
+    const length = Math.hypot(dx, dy) || 1
+    const reach = Math.min(length, STICK_RADIUS)
+    knob.style.transform = `translate(${dx / length * reach}px, ${Math.max(dy, -STICK_RADIUS) / length * reach}px)`
+}
+
+function stickRelease() {
+    stickPointer = null
+    jumpedWithThisPush = false
+    keys.left = false
+    keys.right = false
+    updateVelocity()
+    stick.classList.remove("active")
+    stick.classList.add("idle")
+    placeIdleStick()
+}
+
+;["zone-left", "zone-right"].forEach(id => {
+    const zone = document.getElementById(id)
+
+    zone.addEventListener("pointerdown", event => {
+        if (stickPointer !== null) return
+        event.preventDefault()
+        stickPointer = event.pointerId
+        zone.setPointerCapture(event.pointerId)
+        stickX = event.clientX
+        stickY = event.clientY
+        stick.style.left = `${stickX}px`
+        stick.style.top = `${stickY}px`
+        knob.style.transform = ""
+        stick.classList.remove("idle")
+        stick.classList.add("active")
+    })
+
+    zone.addEventListener("pointermove", event => {
+        if (event.pointerId === stickPointer) stickMove(event)
+    })
+
+    ;["pointerup", "pointercancel", "lostpointercapture"].forEach(type =>
+        zone.addEventListener(type, event => {
+            if (event.pointerId === stickPointer) stickRelease()
+        }))
+})
+
+setHand(savedHand())
+;["resize", "orientationchange", "fullscreenchange", "webkitfullscreenchange"].forEach(type =>
+    window.addEventListener(type, () => setTimeout(placeIdleStick, 250)))
 
 //no menu when pressing for a long time
 document.addEventListener("contextmenu", event => { if (isTouch) event.preventDefault() })

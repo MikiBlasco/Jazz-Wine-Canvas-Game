@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Jazz & Wine</title>
-    <link rel="stylesheet" href="styles/style.css?v=10">
+    <link rel="stylesheet" href="styles/style.css?v=11">
     <script>
         //phones and tablets: touch buttons instead of the keyboard
         if (window.matchMedia("(pointer: coarse)").matches || "ontouchstart" in window) {
@@ -44,12 +44,14 @@
               <div class="row">
                 <span class="keys keys-only"><kbd>&larr;</kbd><kbd>&rarr;</kbd></span>
                 <span class="keys touch-only"><kbd class="pad">&#9664;</kbd><kbd class="pad">&#9654;</kbd></span>
-                <span class="text">run left and right</span>
+                <span class="text keys-only">run left and right</span>
+                <span class="text touch-only">drag the joystick left or right to run</span>
               </div>
               <div class="row">
                 <span class="keys keys-only"><kbd>&uarr;</kbd><kbd class="wide">space</kbd></span>
                 <span class="keys touch-only"><kbd class="pad round">&#9650;</kbd></span>
-                <span class="text">jump</span>
+                <span class="text keys-only">jump</span>
+                <span class="text touch-only">slide up to jump (you can do both at once)</span>
               </div>
             </div>
 
@@ -82,6 +84,7 @@
         </div>
 
         <button id="startButton">Play</button>
+        <button id="handButton">Joystick: right hand</button>
         <button id="fullscreenButton">&#9974; Full screen</button>
         <p id="ios-hint">For full screen on iPhone: tap <b>Share</b> &rarr; <b>Add to Home Screen</b>, then open Jazz &amp; Wine from there.</p>
 
@@ -92,20 +95,22 @@
     <!-- ===================== Game ===================== -->
     <div id="in-canvas" class="hidden">
 
-      <!-- touch controls live OUTSIDE the game, in the side bands (only on phones and tablets) -->
-      <div id="zone-left">
-        <div class="pad jump" id="jumpLeft">&#9650;</div>
-        <div class="pad move" id="btnLeft">&#9664;</div>
-      </div>
+      <!-- the joystick lives OUTSIDE the game, in a band at one side (left or right hand) -->
+      <div id="zone-left" class="zone"></div>
 
       <div id="screen">
         <canvas id="canvas" width="900" height="500"></canvas>
         <button id="playAgain" class="hidden">Play again</button>
       </div>
 
-      <div id="zone-right">
-        <div class="pad jump" id="jumpRight">&#9650;</div>
-        <div class="pad move" id="btnRight">&#9654;</div>
+      <div id="zone-right" class="zone"></div>
+
+      <!-- the joystick: it appears where the thumb touches -->
+      <div id="stick" class="idle">
+        <span class="mark up">&#9650;</span>
+        <span class="mark left">&#9664;</span>
+        <span class="mark right">&#9654;</span>
+        <div id="knob"></div>
       </div>
 
     </div>
@@ -118,18 +123,18 @@
     <p>Turn your phone sideways<br>to play Jazz &amp; Wine</p>
   </div>
 
-    <script src="js/background.js?v=10"></script>
-    <script src="js/catNinja.js?v=10"></script>
-    <script src="js/cat.js?v=10"></script>
-    <script src="js/bottleBig.js?v=10"></script>
-    <script src="js/runnerCat.js?v=10"></script>
-    <script src="js/bread.js?v=10"></script>
-    <script src="js/effects.js?v=10"></script>
-    <script src="js/tutorial.js?v=10"></script>
-    <script src="js/glass.js?v=10"></script>
-    <script src="js/player.js?v=10"></script>
-    <script src="js/game.js?v=10"></script>
-    <script src="js/index.js?v=10"></script>
+    <script src="js/background.js?v=11"></script>
+    <script src="js/catNinja.js?v=11"></script>
+    <script src="js/cat.js?v=11"></script>
+    <script src="js/bottleBig.js?v=11"></script>
+    <script src="js/runnerCat.js?v=11"></script>
+    <script src="js/bread.js?v=11"></script>
+    <script src="js/effects.js?v=11"></script>
+    <script src="js/tutorial.js?v=11"></script>
+    <script src="js/glass.js?v=11"></script>
+    <script src="js/player.js?v=11"></script>
+    <script src="js/game.js?v=11"></script>
+    <script src="js/index.js?v=11"></script>
 
 
 

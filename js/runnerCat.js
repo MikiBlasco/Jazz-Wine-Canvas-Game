@@ -11,6 +11,11 @@ class RunnerCat {
         //frames since the game started (used to decide when a cat appears)
         this.ticks = 0;
 
+        //two running cats never come one after the other:
+        //a new one needs the previous one to have left, plus a short pause
+        this.sinceSpawn = 0;
+        this.sinceGone = 60;
+
         //image: a sheet with two frames of the run
         this.img = new Image();
         this.img.src = "images/cat-run.png"
@@ -18,8 +23,8 @@ class RunnerCat {
         this.frameHeight = 205;
 
         //size on the canvas
-        this.width = 105;
-        this.height = 64;
+        this.width = 105 * SPRITE_SCALE;
+        this.height = 64 * SPRITE_SCALE;
 
         //the floor is where the dog's feet are (player y + height)
         this.floor = 490;
@@ -32,6 +37,10 @@ class RunnerCat {
     generate(score, dogX) {
         this.ticks++
 
+        //time since the last running cat left the screen
+        if (this.cats.length > 0) this.sinceGone = 0
+        else this.sinceGone++
+
         if (this.ticks <= 100) return
 
         let every = 0
@@ -40,8 +49,16 @@ class RunnerCat {
         if (score >= 70 && score < 90) every = 220
         if (score >= 90 && score <= 100) every = 120
 
-        if (every > 0 && this.ticks % every === 0) {
+        if (every === 0) {
+            this.sinceSpawn = 0
+            return
+        }
+
+        this.sinceSpawn++
+
+        if (this.sinceSpawn >= every && this.cats.length === 0 && this.sinceGone >= 60) {
             this.spawn(dogX)
+            this.sinceSpawn = 0
         }
     }
 
@@ -108,10 +125,10 @@ class RunnerCat {
         this.cats = this.cats.filter(cat => {
             //a bit smaller than the picture, so it is not unfair
             const hit = {
-                x: cat.x + 20,
-                y: cat.y + 16,
-                width: cat.width - 40,
-                height: cat.height - 16
+                x: cat.x + 20 * SPRITE_SCALE,
+                y: cat.y + 16 * SPRITE_SCALE,
+                width: cat.width - 40 * SPRITE_SCALE,
+                height: cat.height - 16 * SPRITE_SCALE
             }
 
             const touching =

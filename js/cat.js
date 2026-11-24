@@ -9,8 +9,8 @@ class Cat {
         this.img.src = "images/cat-3.png"
         
         //size of the cat
-        this.width = 35
-        this.height = 42
+        this.width = 35 * SPRITE_SCALE
+        this.height = 42 * SPRITE_SCALE
         //coordinates
         this.x = x; //randomness on the x that we will build on a function?
         this.y = y; //begining of "y" axi = 0
@@ -34,7 +34,7 @@ class Cat {
     //x is optional: the tutorial chooses where the cat falls
     spawn(score, x) {
         if (x === undefined) {
-            x = Math.floor((Math.random() * (this.ctx.canvas.width - 35)))
+            x = Math.floor((Math.random() * (this.ctx.canvas.width - 35 * SPRITE_SCALE)))
         }
         const newCat = new Cat(ctx, x, -10)
         newCat.vy = this.fallSpeed(score)

@@ -43,7 +43,7 @@ class Game {
 
         //every level has a clock (in seconds). If it runs out, the dog loses.
         //Reaching the next level gives the full time of that level.
-        this.levelTimes = [100, 90, 50, 80]
+        this.levelTimes = [90, 80, 45, null]   // null = the last level has no clock
         this.timeLeft = this.levelTimes[0] * 60   // in frames (60 per second)
         this.displayTime = 1                      // 0 to 1, smooth version for the bar
         this.timeUp = false
@@ -52,12 +52,17 @@ class Game {
         this.maxExtraSpeed = 0.35
     }
 
+    hasClock(){
+        return this.levelTimes[this.level - 1] !== null
+    }
+
     levelTotalFrames(){
-        return this.levelTimes[this.level - 1] * 60
+        return (this.levelTimes[this.level - 1] || 0) * 60
     }
 
     //0 to 1: how much pressure the clock has built up (it starts after 40% of the time)
     pressure(){
+        if (!this.hasClock()) return 0
         const used = 1 - this.timeLeft / this.levelTotalFrames()
         return Math.max(0, Math.min(1, (used - 0.4) / 0.6))
     }
@@ -78,10 +83,10 @@ class Game {
 
         if (reached > this.level) {
             this.level = reached
-            this.timeLeft = this.levelTotalFrames()   // the clock is full again
+            this.timeLeft = this.levelTotalFrames()   // the clock is full again (the last level has none)
             this.levelFlash = 90
             this.effects.popup(`LEVEL ${this.level}`, this.ctx.canvas.width / 2, 150, "#ffd54a")
-        } else {
+        } else if (this.hasClock()) {
             this.timeLeft--
             if (this.timeLeft <= 0) {
                 this.timeLeft = 0
@@ -149,6 +154,7 @@ class Game {
         this.drawScore();
         this.drawProgressBar();
         this.drawDanger();
+        this.drawCountdown();
         this.effects.update();
         this.effects.draw();
         this.background.backgroundChange(this.effectiveScore());
@@ -508,17 +514,18 @@ class Game {
         ctx.shadowBlur = 0
 
         //---------------- clock bar
+        const clock = this.hasClock()
         const total = this.levelTotalFrames()
-        const fraction = Math.max(0, Math.min(1, this.timeLeft / total))
+        const fraction = clock ? Math.max(0, Math.min(1, this.timeLeft / total)) : 1
         //it empties smoothly, and refills fast when a new level starts
         this.displayTime += (fraction - this.displayTime) * (fraction > this.displayTime ? 0.15 : 0.5)
         if (Math.abs(fraction - this.displayTime) < 0.002) this.displayTime = fraction
 
         const seconds = Math.ceil(this.timeLeft / 60)
-        const low = fraction < 0.25
-        const mid = fraction < 0.5
+        const low = clock && fraction < 0.25
+        const mid = clock && fraction < 0.5
         const clockPulse = low ? 0.5 + 0.5 * Math.sin(this.ticks * 0.3) : 0
-        const barColor = low ? "#ff4d4d" : mid ? "#ffb347" : "#5ec8ff"
+        const barColor = !clock ? "#b58cff" : low ? "#ff4d4d" : mid ? "#ffb347" : "#5ec8ff"
 
         roundRect(x, y2, w, h2, 6)
         ctx.fillStyle = "rgba(10, 0, 30, 0.5)"
@@ -567,7 +574,8 @@ class Game {
         ctx.fillStyle = low ? "#ff8080" : "white"
         ctx.shadowColor = "rgba(0, 0, 0, 0.7)"
         ctx.shadowBlur = 4
-        ctx.fillText(`${mm}:${ss}`, x + w + 10, cy + 1)
+        ctx.font = clock ? "bold 17px sans-serif" : "bold 24px sans-serif"
+        ctx.fillText(clock ? `${mm}:${ss}` : "\u221e", x + w + 10, cy + (clock ? 1 : 2))
 
         ctx.restore()
 
@@ -652,6 +660,33 @@ class Game {
         ctx.moveTo(2, 6); ctx.lineTo(2, 13)
         ctx.stroke()
 
+        ctx.restore()
+    }
+
+    //the last 10 seconds of a level: big numbers in the middle of the screen
+    drawCountdown(){
+        if (this.tutorial.active || !this.hasClock()) return
+        const left = this.timeLeft
+        if (left <= 0 || left > 600) return
+
+        const ctx = this.ctx
+        const seconds = Math.ceil(left / 60)
+        const progress = 1 - ((left - 1) % 60) / 60          // 0 when the number appears, 1 when it is about to change
+        const scale = 1.5 - 0.5 * Math.min(1, progress * 2)  // it starts big and shrinks
+        const alpha = 1 - 0.45 * progress
+
+        ctx.save()
+        ctx.translate(ctx.canvas.width / 2, 170)
+        ctx.scale(scale, scale)
+        ctx.textAlign = "center"
+        ctx.textBaseline = "middle"
+        ctx.font = "bold 110px sans-serif"
+        ctx.lineJoin = "round"
+        ctx.lineWidth = 10
+        ctx.strokeStyle = `rgba(60, 0, 0, ${0.8 * alpha})`
+        ctx.strokeText(String(seconds), 0, 0)
+        ctx.fillStyle = `rgba(255, 80, 80, ${alpha})`
+        ctx.fillText(String(seconds), 0, 0)
         ctx.restore()
     }
 

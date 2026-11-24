@@ -4,15 +4,15 @@ class Player {
         this.ctx = ctx;
 
         //size
-        this.width = 100;
-        this.height = 110;
+        this.width = 100 * SPRITE_SCALE;
+        this.height = 110 * SPRITE_SCALE;
 
          //coordinates
         this.x = 510;
-        this.y = 380;
+        this.y = 490 - this.height;   // the feet touch the floor (490)
 
         //the ground: the "y" where the dog stands when it is not jumping
-        this.groundY = 380;
+        this.groundY = 490 - this.height;
 
         //velocity
         this.vx = 0;

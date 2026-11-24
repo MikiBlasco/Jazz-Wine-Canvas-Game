@@ -10,6 +10,7 @@ this is a game where:
 - Normal Cats substract 1 point from the score
 - Ninja Cats Substract 10! points from the score
 - Cats that run on the floor (jump over them!) substract 10 points, like the Ninja Cats
+- When the game ends, the "Play again" button starts a new game right away.
 - The golden bread is very rare (3 in the whole game), falls fast and adds 10 points
 
 - The goal is to get to 100 points: a bar at the top shows how close you are. When you win, the dog does a somersault.

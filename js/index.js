@@ -46,6 +46,61 @@ startButton.onclick = ()=> {
     
 };
 
+//Play again---------------------------------------------------------------------------------------------
+const playAgainButton = document.getElementById("playAgain")
+
+//called by the game when it ends (win or lose)
+function onGameEnd(result) {
+    keys.left = false
+    keys.right = false
+    playAgainButton.textContent = result === "win" ? "Play again" : "Try again"
+    playAgainButton.classList.remove("hidden")
+    playAgainButton.focus()
+}
+
+//puts a game object back to its initial state (keeping its already loaded images)
+function resetObject(object, NewObject) {
+    const images = {}
+    Object.keys(object).forEach(key => {
+        if (object[key] instanceof HTMLImageElement) images[key] = object[key]
+    })
+    Object.assign(object, new NewObject(ctx), images)
+}
+
+function restartGame() {
+    playAgainButton.classList.add("hidden")
+    playAgainButton.blur()
+
+    ;[main1, main2, main3, final, win].forEach(audio => {
+        audio.pause()
+        audio.currentTime = 0
+    })
+
+    resetObject(player, Player)
+    resetObject(glass, Glass)
+    resetObject(bottleBig, BottleBig)
+    resetObject(cat, Cat)
+    resetObject(catNinja, CatNinja)
+    resetObject(runnerCat, RunnerCat)
+    resetObject(bread, Bread)
+
+    background.current = "night"
+    background.img = background.images.night
+    background.currentTrack = null
+
+    Object.assign(game, new Game(ctx, player, glass, bottleBig, cat, catNinja, background, runnerCat, bread))
+
+    //whoever plays again already knows the tutorial: it is skipped, and the three golden breads come later
+    game.tutorial.active = false
+
+    keys.left = false
+    keys.right = false
+    player.vx = 0
+    game.start()
+}
+
+playAgainButton.onclick = restartGame
+
 //Events------------------------------------------------------------------------------
 
 //link movement to the keyboard.

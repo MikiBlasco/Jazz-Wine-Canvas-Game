@@ -278,15 +278,15 @@ class Game {
         if(this.score <= 0) {
             this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
             this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-            this.ctx.fillStyle = "white";
             this.ctx.textAlign = "center";
-            this.ctx.font = "bold 32px sans-serif";
-            this.ctx.fillText(
-              "Game Over",
-              this.ctx.canvas.width / 2,
-              this.ctx.canvas.height / 2
-            );
+            this.ctx.fillStyle = "#ff6b6b";
+            this.ctx.font = "bold 52px sans-serif";
+            this.ctx.fillText("Game Over", this.ctx.canvas.width / 2, this.ctx.canvas.height / 2 - 20);
+            this.ctx.fillStyle = "white";
+            this.ctx.font = "22px sans-serif";
+            this.ctx.fillText(`You reached level ${this.level}`, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2 + 24);
             this.stop()
+            if (typeof onGameEnd === "function") onGameEnd("lose")
           }
 
         if(this.score >= 100) {
@@ -348,16 +348,16 @@ class Game {
             this.ctx.save()
             this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
             this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
-            this.ctx.fillStyle = "white"
             this.ctx.textAlign = "center"
-            this.ctx.font = "bold 50px sans-serif"
-            this.ctx.fillText(
-              `YOU WIN!`,
-              this.ctx.canvas.width / 2,
-              this.ctx.canvas.height / 2
-            )
+            this.ctx.fillStyle = "#ffd54a"
+            this.ctx.font = "bold 60px sans-serif"
+            this.ctx.fillText(`YOU WIN!`, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2 - 20)
+            this.ctx.fillStyle = "white"
+            this.ctx.font = "22px sans-serif"
+            this.ctx.fillText("Jazz caught all the wine!", this.ctx.canvas.width / 2, this.ctx.canvas.height / 2 + 24)
             this.ctx.restore()
             this.stop()
+            if (typeof onGameEnd === "function") onGameEnd("win")
         }
     }
 

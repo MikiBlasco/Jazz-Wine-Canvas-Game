@@ -55,7 +55,7 @@ class Glass {
     move() {
 
         this.glasses.forEach(object=>{
-            object.y += object.vy
+            object.y += object.vy * (this.speedMul || 1)
         })
     }
 

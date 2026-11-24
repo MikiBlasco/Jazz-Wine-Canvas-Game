@@ -29,6 +29,51 @@ class Game {
 
         //frames since the start (for the pulsing effects)
         this.ticks = 0
+
+        //levels only go forward: 1 (0+), 2 (40+), 3 (70+), 4 (80+)
+        this.levelStarts = [0, 40, 70, 80]
+        this.level = 1
+        this.levelFlash = 0
+
+        //the longer the dog stays in one level, the faster things fall
+        this.levelTicks = 0
+        this.graceTicks = 1500   // ~25 seconds without extra pressure
+        this.rampTicks = 3600    // ~60 seconds until the maximum
+        this.maxExtraSpeed = 0.4 // +40% at most
+    }
+
+    //0 to 1: how much pressure the current level has built up
+    pressure(){
+        return Math.max(0, Math.min(1, (this.levelTicks - this.graceTicks) / this.rampTicks))
+    }
+
+    //score used for the difficulty and the background: it never goes below the start of the level reached
+    effectiveScore(){
+        return Math.max(this.score, this.levelStarts[this.level - 1])
+    }
+
+    updateLevel(){
+        if (this.tutorial.active) return
+
+        //only advance, never go back
+        let reached = this.level
+        this.levelStarts.forEach((start, i) => {
+            if (this.score >= start && i + 1 > reached) reached = i + 1
+        })
+
+        if (reached > this.level) {
+            //a new level relaxes the pressure a little (it keeps 40% of what had built up)
+            const carried = 0.4 * this.pressure()
+            this.level = reached
+            this.levelTicks = carried > 0 ? this.graceTicks + carried * this.rampTicks : 0
+            this.levelFlash = 90
+            this.effects.popup(`LEVEL ${this.level}`, this.ctx.canvas.width / 2, 150, "#ffd54a")
+        } else {
+            this.levelTicks++
+        }
+
+        const mul = 1 + this.maxExtraSpeed * this.pressure()
+        ;[this.glass, this.bottleBig, this.cat, this.catNinja, this.runnerCat].forEach(o => o.speedMul = mul)
     }
 
     start(){
@@ -56,16 +101,16 @@ class Game {
         this.draw();
         this.move();
         this.updateScore();
+        this.updateLevel();
         this.generateSecondarys();
         this.checkCollisions();
         this.destroySecondarys();               
         this.drawScore();
-        this.drawLevel(); 
         this.drawProgressBar();
         this.drawDanger();
         this.effects.update();
         this.effects.draw();
-        this.background.backgroundChange(this.score);
+        this.background.backgroundChange(this.effectiveScore());
         this.GameOver();       
     }
 
@@ -84,12 +129,12 @@ class Game {
             return
         }
 
-        this.cat.generate(this.score, this.frameNumber)
-        this.catNinja.generate(this.score, this.frameNumber)
+        this.cat.generate(this.effectiveScore(), this.frameNumber)
+        this.catNinja.generate(this.effectiveScore(), this.frameNumber)
         this.glass.generate(this.frameNumber)
-        this.bottleBig.generate(this.score, this.frameNumber)
-        this.runnerCat.generate(this.score)
-        this.bread.generate(this.score)
+        this.bottleBig.generate(this.effectiveScore(), this.frameNumber)
+        this.runnerCat.generate(this.effectiveScore())
+        this.bread.generate(this.effectiveScore())
     }
  
     destroySecondarys(){
@@ -207,23 +252,6 @@ class Game {
         }
     }
     
-    drawLevel(){
-        //score Level
-        if(this.score > 50 && this.score <=80) {  
-
-        this.text = ctx.fillText(`${this.score} points`, this.x, this.y)
-        this.text = ctx.fillText(`Level 2`, 700, this.y)   
-    
-        } else if (this.score > 80 && this.score <=100) {      
-        this.text = ctx.fillText(`${this.score} points`, this.x, this.y)
-        this.text = ctx.fillText(`Level 3`, 700, this.y)
-    
-        } else {
-        this.text = ctx.fillText(`${this.score} points`, this.x, this.y)
-        this.text = ctx.fillText(`Level 1`, 700, this.y)
-        }
-    }
-
     drawScore(){        
         //score Number        
         if (this.score >= 0 && this.score < 100) {
@@ -309,7 +337,6 @@ class Game {
         this.player.draw()
 
         this.drawScore()
-        this.drawLevel()
         this.drawProgressBar()
 
         //a short pause after landing, then the message
@@ -340,7 +367,7 @@ class Game {
     //and pulses, so it is clear how close the dog is to losing.
     drawProgressBar(){
         const ctx = this.ctx
-        const x = 84, y = 14, w = 696, h = 18, r = 9
+        const x = 96, y = 14, w = 684, h = 18, r = 9
         const goal = 100
 
         //it moves smoothly instead of jumping
@@ -416,7 +443,8 @@ class Game {
         ctx.stroke()
 
         //left end: a skull (this is where you lose)
-        this.drawSkull(52, y + h / 2, danger, pulse)
+        this.drawSkull(66, y + h / 2, danger, pulse)
+        this.drawLevelBadge(26, y + h / 2)
 
         //right end: a star and the number 100 (this is where you win)
         const sx = x + w + 26, sy = y + h / 2
@@ -441,6 +469,42 @@ class Game {
         ctx.shadowBlur = 4
         ctx.fillText("100", sx + 20, sy + 1)
 
+        ctx.restore()
+    }
+
+    //round badge with the level number (it flashes when you reach a new level)
+    drawLevelBadge(cx, cy){
+        const ctx = this.ctx
+        const flash = this.levelFlash > 0 ? this.levelFlash-- / 90 : 0
+        ctx.save()
+        ctx.translate(cx, cy)
+        const s = 1 + 0.35 * flash * Math.abs(Math.sin(flash * 12))
+        ctx.scale(s, s)
+
+        if (flash > 0) {
+            ctx.beginPath()
+            ctx.arc(0, 0, 15 + 12 * (1 - flash), 0, Math.PI * 2)
+            ctx.strokeStyle = `rgba(255, 213, 74, ${flash})`
+            ctx.lineWidth = 3
+            ctx.stroke()
+        }
+
+        const g = ctx.createLinearGradient(0, -16, 0, 16)
+        g.addColorStop(0, "#ffe27a")
+        g.addColorStop(1, "#c4781a")
+        ctx.beginPath()
+        ctx.arc(0, 0, 16, 0, Math.PI * 2)
+        ctx.fillStyle = g
+        ctx.fill()
+        ctx.lineWidth = 2.5
+        ctx.strokeStyle = "#3a1a00"
+        ctx.stroke()
+
+        ctx.font = "bold 20px sans-serif"
+        ctx.textAlign = "center"
+        ctx.textBaseline = "middle"
+        ctx.fillStyle = "#2a0f00"
+        ctx.fillText(String(this.level), 0, 1)
         ctx.restore()
     }
 

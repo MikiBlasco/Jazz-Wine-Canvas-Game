@@ -52,7 +52,7 @@ class BottleBig {
     //creating cats every certain time, pushing them into the array and asigning a random x value (de y value will always be 0 since they fall from the top)
     move() {
         this.bottlesBig.forEach(object=>{
-            object.y += object.vy
+            object.y += object.vy * (this.speedMul || 1)
         })
     }
 

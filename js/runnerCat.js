@@ -61,7 +61,7 @@ class RunnerCat {
 
     move() {
         this.cats.forEach(cat => {
-            cat.x += cat.direction * this.speed
+            cat.x += cat.direction * this.speed * (this.speedMul || 1)
             cat.age++
         })
 

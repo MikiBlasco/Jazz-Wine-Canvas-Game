@@ -78,10 +78,10 @@ class Cat {
         this.cats.forEach(object =>{
 
             if(Math.random() > 0.5){
-                object.y += object.vy
+                object.y += object.vy * (this.speedMul || 1)
                 object.x -= object.vx
             } else {
-                object.y += object.vy
+                object.y += object.vy * (this.speedMul || 1)
                 object.x += object.vx
             }
             //if(Math.random() < 0.5)

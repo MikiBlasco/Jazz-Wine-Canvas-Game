@@ -68,7 +68,7 @@ class CatNinja {
 
     move() {
         this.catsN.forEach(object=>{
-            object.y += object.vy
+            object.y += object.vy * (this.speedMul || 1)
             object.x += object.vx
         })
     }

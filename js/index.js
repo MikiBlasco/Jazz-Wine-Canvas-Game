@@ -74,7 +74,7 @@ document.addEventListener('keydown', (event)=>{
         case "KeyW":
         case "Space":
             //holding the key does not make the dog jump again and again
-            if (!event.repeat) player.jump()
+            if (!event.repeat && !game.winning) player.jump()
             event.preventDefault()
     }
 });

@@ -22,6 +22,11 @@ class Player {
         this.jumpSpeed = 16.5;
         this.gravity = 0.62;
 
+        //victory somersault
+        this.flipping = false;
+        this.flipFrame = 0;
+        this.flipAngle = 0;
+
         //image
         this.img = new Image();
         this.img.src = "images/Jazz-No-border.png"
@@ -55,14 +60,55 @@ class Player {
     }
 
     draw() {
+        if (this.flipAngle !== 0) {
+            //turning around the center of the dog
+            this.ctx.save()
+            this.ctx.translate(this.x + this.width / 2, this.y + this.height / 2)
+            this.ctx.rotate(this.flipAngle)
+            this.ctx.drawImage(this.img, -this.width / 2, -this.height / 2, this.width, this.height)
+            this.ctx.restore()
+            return
+        }
+
         this.ctx.drawImage(
             this.img,
             this.x,
             this.y,
             this.width,
-            this.height,
-
+            this.height
         );
+    }
+
+    //A jump with a full forward somersault (the dog looks to the left,
+    //so it turns counterclockwise).
+    startFlip() {
+        this.flipping = true
+        this.flipFrame = 0
+        this.vx = 0
+        this.vy = -this.jumpSpeed
+    }
+
+    //moves the dog one frame during the somersault. Returns true when it lands.
+    updateFlip() {
+        if (!this.flipping) return true
+
+        this.flipFrame++
+        this.vy += this.gravity
+        this.y += this.vy
+
+        //the turn follows the time in the air (smooth start and end)
+        const airTime = 2 * this.jumpSpeed / this.gravity
+        const p = Math.min(1, this.flipFrame / airTime)
+        this.flipAngle = -2 * Math.PI * (p * p * (3 - 2 * p))
+
+        if (this.y >= this.groundY) {
+            this.y = this.groundY
+            this.vy = 0
+            this.flipping = false
+            this.flipAngle = 0
+            return true
+        }
+        return false
     }
 
     collidesWith(object) {

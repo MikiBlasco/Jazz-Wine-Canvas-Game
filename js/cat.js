@@ -23,33 +23,34 @@ class Cat {
     }
      
         
+    //How fast a new cat falls. It only gets faster in the last two screens
+    //(70+ points) and it is very fast in the last one (80+ points).
+    fallSpeed(score) {
+        if (score < 70) return 1
+        if (score < 80) return 1 + (score - 70) * 0.1        // from 1 to 2
+        return Math.min(4, 2 + (score - 80) * 0.1)           // from 2 to 4
+    }
+
+    spawn(score) {
+        const x = Math.floor((Math.random() * (this.ctx.canvas.width - 35)))
+        const newCat = new Cat(ctx, x, -10)
+        newCat.vy = this.fallSpeed(score)
+        this.cats.push(newCat)
+    }
+
     generate(score, frameNumber) {
 
-       if (score > 0 && score < 30) {
+        if (frameNumber <= 50) return
 
-        if(frameNumber > 50 && frameNumber % 320 === 0) {    
-            this.x = Math.floor((Math.random() * (this.ctx.canvas.width - 35))),
-            this.y = -10,
-            this.cats.push(new Cat(ctx, this.x, this.y))         
-        }
-    }
-        if (score > 20 && score < 80) {
+        //at the beginning a cat every 320 frames
+        if (score > 0 && score < 30 && frameNumber % 320 === 0) this.spawn(score)
 
+        //from 20 to 70 points a cat every 180 frames
+        if (score > 20 && score < 70 && frameNumber % 180 === 0) this.spawn(score)
 
-            if(frameNumber > 50 && frameNumber % 180 === 0) {    
-                this.x = Math.floor((Math.random() * (this.ctx.canvas.width - 35))),
-                this.y = -10,
-                this.cats.push(new Cat(ctx, this.x, this.y))           
-            }
-        }
-        
-        if (score >= 80) {
-                if(frameNumber > 50 && frameNumber % 60 === 0) {    
-                    this.x = Math.floor((Math.random() * (this.ctx.canvas.width - 35))),
-                    this.y = -10,
-                    this.cats.push(new Cat(ctx, this.x, this.y))          
-                }    
-     } 
+        //the last two screens have fewer cats than before, but they fall faster
+        if (score >= 70 && score < 80 && frameNumber % 220 === 0) this.spawn(score)
+        if (score >= 80 && frameNumber % 150 === 0) this.spawn(score)
    }
 
    checkCollision(){

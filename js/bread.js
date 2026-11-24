@@ -21,7 +21,7 @@ class Bread {
 
         //a bread appears the first time the score reaches each of these numbers,
         //so there are only 5 in the whole game
-        this.milestones = [20, 40, 55, 70, 85];
+        this.milestones = [20, 55, 80];
         this.next = 0;
     }
 

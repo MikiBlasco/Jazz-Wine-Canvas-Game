@@ -55,7 +55,7 @@ class Tutorial {
 
     dropBread(game) {
         game.bread.spawnAt(this.nearDog(game, 80, game.bread.width))
-        //this bread is the first one of the game: the next one comes at 40 points
+        //this bread is the first one of the game: the next ones come at 55 and 80 points
         game.bread.next = 1
     }
 

@@ -40,14 +40,18 @@ const startButton = document.getElementById("startButton")
 startButton.onclick = ()=> {
     inCanvas.classList.toggle("hidden")
     outCanvas.classList.toggle("hidden")
-    startButton.textContent = "!Speed Up!"
     startButton.blur();
-    enterFullscreen()
-    fitScreen()
-    placeIdleSticks()
-    checkOrientation()
+
+    //none of these extras can stop the game from starting
+    const safely = (step, name) => {
+        try { step() } catch (error) { if (window.jwShowError) window.jwShowError(`${name}: ${error.message}`) }
+    }
+    safely(enterFullscreen, "fullscreen")
+    safely(fitScreen, "size")
+    safely(placeIdleSticks, "joystick")
+    safely(checkOrientation, "orientation")
+
     game.start();
-    
 };
 
 //Touch controls and screen size----------------------------------------------------------------------
@@ -189,8 +193,8 @@ handButton.addEventListener("click", () => setHand(HANDS[(HANDS.indexOf(currentH
 let stickPointer = null     // the finger that is playing now
 
 function makeStick(zone) {
-    const stick = zone.querySelector(".stick")
-    const knob = zone.querySelector(".knob")
+    const stick = zone.querySelector(".stick") || document.createElement("div")
+    const knob = zone.querySelector(".knob") || document.createElement("div")
     let x = 0, y = 0
     let running = 0          // -1 left, 0 none, 1 right
     let jumpArmed = true

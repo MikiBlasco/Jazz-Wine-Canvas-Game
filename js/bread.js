@@ -1,5 +1,8 @@
 //A very special bread that falls only a few times in the whole game.
-//It falls fast, shines, and gives twice the points of a bottle (+10).
+//It shines and gives twice the points of a bottle (+10).
+//Two ways to make it hard to get (the page address chooses one):
+//  default      -> it falls very slowly: the risk is waiting under it while cats come
+//  ?pan=zigzag  -> it falls at a normal speed, moving left and right
 class Bread {
     constructor(ctx) {
         this.ctx = ctx;
@@ -15,9 +18,15 @@ class Bread {
         this.width = 76;
         this.height = 40;
 
-        //it falls faster than anything else (the big cat falls at 3.9),
-        //but slow enough to see it coming
-        this.vy = 5.5;
+        this.style = new URLSearchParams(window.location.search).get("pan") === "zigzag" ? "zigzag" : "slow"
+
+        //slow: slower than everything else, so you can watch it fall
+        //zigzag: a normal speed (the glass falls at 1.8, the bottle at 2.5, the big cat at 3.9)
+        this.vy = this.style === "zigzag" ? 3 : 1.5;
+
+        //zigzag: how far it goes to each side and how fast it swings
+        this.amplitude = 110;
+        this.omega = 0.06;
 
         //a bread appears the first time the score reaches each of these numbers,
         //so there are only 5 in the whole game
@@ -39,8 +48,15 @@ class Bread {
     }
 
     spawnAt(x) {
+        //in zigzag the bread swings around its line, so that line has to leave room to both sides
+        if (this.style === "zigzag") {
+            const max = this.ctx.canvas.width - this.width - this.amplitude
+            x = Math.max(this.amplitude, Math.min(max, x))
+        }
+
         this.breads.push({
             x: x,
+            baseX: x,
             y: -this.height,
             width: this.width,
             height: this.height,
@@ -52,6 +68,9 @@ class Bread {
         this.breads.forEach(bread => {
             bread.y += this.vy
             bread.age++
+            if (this.style === "zigzag") {
+                bread.x = bread.baseX + this.amplitude * Math.sin(bread.age * this.omega)
+            }
         })
 
         //the ones that reach the floor are lost

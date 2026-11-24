@@ -24,8 +24,8 @@ class RunnerCat {
         //the floor is where the dog's feet are (player y + height)
         this.floor = 490;
 
-        //same speed as the big falling cat
-        this.speed = 3.9;
+        //a bit faster than the big falling cat (3.9), so a simple jump is enough to clear it
+        this.speed = 5.2;
     }
 
     //same score ranges and frequency as CatNinja.generate

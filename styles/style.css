@@ -301,49 +301,65 @@ html.touch.hand-both #zone-right { display: block; }
 
 html.touch #screen { flex: none; }
 
-/* ---- the joystick ---- */
-.stick { display: none; }
+/* ---- the pad: a fixed circle, always visible ----
+   The finger decides what happens by where it is inside the circle:
+   left side = run left, right side = run right, upper moon = jump (diagonals do both). */
+.pad { display: none; }
 
-html.touch .stick {
+html.touch .pad {
     display: block;
-    position: fixed;
-    width: 96px;
-    height: 96px;
-    margin: -48px 0 0 -48px;
+    --size: min(calc(var(--band, 130px) - 12px), 140px);
+    position: absolute;
+    left: 50%;
+    top: 64%;
+    width: var(--size);
+    height: var(--size);
+    transform: translate(-50%, -50%);
     border-radius: 50%;
     pointer-events: none;
     background: rgba(255, 255, 255, 0.10);
-    border: 2px solid rgba(255, 255, 255, 0.35);
+    border: 2px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-    z-index: 5;
-    transition: opacity 0.15s;
+    overflow: hidden;
 }
 
-html.touch .stick.idle { display: none; }
-.stick.active { opacity: 1; background: rgba(255, 255, 255, 0.18); }
-
-.stick .mark {
+/* the upper moon (jump) */
+.pad::before {
+    content: "";
     position: absolute;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 15px;
+    left: 0; right: 0; top: 0;
+    height: 35%;
+    background: rgba(255, 213, 74, 0.22);
+    border-bottom: 1.5px dashed rgba(255, 255, 255, 0.45);
+}
+
+.pad .mk {
+    position: absolute;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: calc(var(--size) * 0.2);
     line-height: 1;
 }
-.stick .mark.up    { left: 50%; top: 5px; transform: translateX(-50%); }
-.stick .mark.left  { left: 6px; top: 50%; transform: translateY(-50%); }
-.stick .mark.right { right: 6px; top: 50%; transform: translateY(-50%); }
+.pad .mk.up    { left: 50%; top: 9%; transform: translateX(-50%); }
+.pad .mk.left  { left: 9%; top: 62%; transform: translateY(-50%); }
+.pad .mk.right { right: 9%; top: 62%; transform: translateY(-50%); }
 
-.knob {
+.pad.l .mk.left, .pad.r .mk.right, .pad.u .mk.up { color: #ffd54a; }
+.pad.l { background: linear-gradient(90deg, rgba(255, 213, 74, 0.28) 0 38%, rgba(255, 255, 255, 0.10) 38%); }
+.pad.r { background: linear-gradient(270deg, rgba(255, 213, 74, 0.28) 0 38%, rgba(255, 255, 255, 0.10) 38%); }
+.pad.l.r { background: rgba(255, 255, 255, 0.10); }
+
+/* a dot that follows the finger */
+.pad .thumb {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 44px;
-    height: 44px;
-    margin: -22px 0 0 -22px;
+    left: 50%; top: 50%;
+    width: 26%; height: 26%;
+    margin: -13% 0 0 -13%;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #fff3b0, #e0a02c);
     border: 2px solid rgba(58, 26, 0, 0.7);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+    opacity: 0;
 }
+.pad.touching .thumb { opacity: 1; }
 
 #handButton { display: none; }
 html.touch #handButton {
@@ -456,35 +472,4 @@ html.touch.can-fullscreen #fullscreenButton { display: block; }
 #build { margin: 0; font-size: 10px; color: rgba(205, 191, 230, 0.5); }
 
 
-/* ---- guide of the band: tap the top to jump, hold the left or right side to run ---- */
-.guide { display: none; }
-
-html.touch .guide {
-    display: grid;
-    position: absolute;
-    inset: 0;
-    grid-template-rows: 36% 1fr;
-    grid-template-columns: 1fr 1fr;
-    pointer-events: none;
-    transition: opacity 0.15s;
-}
-
-.zone.pressing .guide { opacity: 0.25; }
-
-.guide .g {
-    align-self: center;
-    justify-self: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    font-size: 18px;
-    color: rgba(255, 255, 255, 0.75);
-    background: rgba(255, 255, 255, 0.10);
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
-}
-
-.guide .g-up { grid-column: 1 / 3; }
 html.touch .zone { position: relative; }

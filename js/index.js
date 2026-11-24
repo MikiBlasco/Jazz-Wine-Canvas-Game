@@ -48,7 +48,6 @@ startButton.onclick = ()=> {
     }
     safely(enterFullscreen, "fullscreen")
     safely(fitScreen, "size")
-    safely(placeIdleSticks, "joystick")
     safely(checkOrientation, "orientation")
 
     game.start();
@@ -71,7 +70,7 @@ function fitScreen() {
     let scale
     if (isTouch) {
         //the game uses the full height; the controls take what is left at the sides
-        //(one band for the joystick, 15% of the width, between 120 and 160 px), so the game gets smaller only if the screen is not wide enough
+        //(one band for the pad, 15% of the width, between 120 and 160 px), so the game gets smaller only if the screen is not wide enough
         const both = document.documentElement.classList.contains("hand-both")
         const band = both
             ? Math.max(96, Math.min(125, 0.115 * availW))
@@ -154,21 +153,14 @@ function checkOrientation() {
 }
 portraitQuery.addEventListener("change", checkOrientation)
 
-//The joystick: one thumb.
-//  drag left or right -> the dog runs
-//  slide up           -> the dog jumps (diagonal = run and jump at the same time)
-//It appears where the thumb touches and follows the thumb, so changing direction is quick.
-//It can be on the right, on the left, or on both sides (the first thumb that touches is the one that plays).
-const DEAD_START = 8        // px of drag before the dog starts running (small = sensitive)
-const DEAD_STOP = 3         // once running, it stops only when the thumb is almost back at the center
-const FOLLOW = 14           // the stick follows the thumb sideways beyond this distance
-const JUMP_DISTANCE = 16    // sliding up this much makes the dog jump
-const MOVE_START = 8         // the thumb has to slide this much to be a joystick (before that it is a press)
-const JUMP_REARM = 5        // the thumb has to come back this close to be able to jump again
-
+//The pad: one fixed circle at the side of the game (right, left, or both sides).
+//Where the finger is inside the circle decides what the dog does:
+//  left side   -> runs left          right side  -> runs right
+//  upper moon  -> jumps              (upper-left / upper-right: runs and jumps)
+//You can press a side, or slide from one place to another without lifting the finger.
 const HAND_KEY = "jazz-wine-hand"
 const HANDS = ["both", "right", "left"]
-const HAND_TEXT = { both: "Joystick: both sides", right: "Joystick: right hand", left: "Joystick: left hand" }
+const HAND_TEXT = { both: "Controls: both sides", right: "Controls: right hand", left: "Controls: left hand" }
 
 function savedHand() {
     try {
@@ -186,151 +178,81 @@ function setHand(hand) {
     try { localStorage.setItem(HAND_KEY, hand) } catch (e) { /* it is optional */ }
     handButton.textContent = HAND_TEXT[hand]
     fitScreen()
-    setTimeout(placeIdleSticks, 50)
 }
 
 handButton.addEventListener("click", () => setHand(HANDS[(HANDS.indexOf(currentHand) + 1) % HANDS.length]))
 
-let stickPointer = null     // the finger that is playing now
+const SIDE_ZONE = 0.22   // the dog runs when the finger is this far (x radius) from the center
+const JUMP_ZONE = 0.30   // and it jumps when the finger is this far (x radius) above the center
 
-function makeStick(zone) {
-    const stick = zone.querySelector(".stick") || document.createElement("div")
-    const knob = zone.querySelector(".knob") || document.createElement("div")
-    let x = 0, y = 0
-    let running = 0          // -1 left, 0 none, 1 right
-    let jumpArmed = true
-    let joystickMode = false   // false while it is just a press; true once the thumb slides
-    let noSlideJumpUntil = 0
+let padPointer = null    // the finger that is playing now
 
-    const put = () => {
-        stick.style.left = `${x}px`
-        stick.style.top = `${y}px`
-    }
+function makePad(zone) {
+    const pad = zone.querySelector(".pad")
+    const thumb = zone.querySelector(".thumb")
+    let jumpHeld = false
 
-    //resting place: low in the middle of its band
-    function placeIdle() {
-        const rect = zone.getBoundingClientRect()
-        if (rect.width === 0) return
-        x = rect.left + rect.width / 2
-        y = rect.top + rect.height * 0.68
-        put()
-        knob.style.transform = ""
-    }
+    function read(event) {
+        const rect = pad.getBoundingClientRect()
+        const radius = rect.width / 2
+        const dx = event.clientX - (rect.left + radius)
+        const dy = event.clientY - (rect.top + radius)
 
-    function move(event) {
-        let dx = event.clientX - x
-        let dy = event.clientY - y
+        const left = dx < -radius * SIDE_ZONE
+        const right = dx > radius * SIDE_ZONE
+        const up = dy < -radius * JUMP_ZONE
 
-        //a plain press (the thumb has not slid yet): the button behaviour goes on
-        if (!joystickMode) {
-            if (Math.hypot(dx, dy) < MOVE_START) return
-            joystickMode = true
-            running = 0
-        }
-
-        //the stick follows the thumb sideways and downwards
-        if (dx > FOLLOW) { x = event.clientX - FOLLOW; dx = FOLLOW }
-        if (dx < -FOLLOW) { x = event.clientX + FOLLOW; dx = -FOLLOW }
-        if (dy > FOLLOW) { y = event.clientY - FOLLOW; dy = FOLLOW }
-        put()
-
-        //running (with a little hysteresis, so it does not flicker around the center)
-        if (running === 0) {
-            if (dx > DEAD_START) running = 1
-            else if (dx < -DEAD_START) running = -1
-        } else if (running === 1 && dx < DEAD_STOP) {
-            running = dx < -DEAD_START ? -1 : 0
-        } else if (running === -1 && dx > -DEAD_STOP) {
-            running = dx > DEAD_START ? 1 : 0
-        }
-        keys.left = running === -1
-        keys.right = running === 1
+        keys.left = left
+        keys.right = right
         updateVelocity()
 
-        //one jump for every upward slide
-        if (dy < -JUMP_DISTANCE) {
-            if (jumpArmed && performance.now() > noSlideJumpUntil && !game.winning && !game.paused) player.jump()
-            jumpArmed = false
-        } else if (dy > -JUMP_REARM) {
-            jumpArmed = true
-        }
+        //one jump every time the finger gets into the upper moon
+        if (up && !jumpHeld && !game.winning && !game.paused) player.jump()
+        jumpHeld = up
 
-        //the knob moves more than the finger, so it is easy to see what is happening
-        const kx = Math.max(-1, Math.min(1, dx / FOLLOW)) * 34
-        const ky = Math.max(-1, Math.min(1, dy / JUMP_DISTANCE)) * 34
-        knob.style.transform = `translate(${kx}px, ${ky}px)`
+        pad.classList.toggle("l", left)
+        pad.classList.toggle("r", right)
+        pad.classList.toggle("u", up)
+
+        //the dot follows the finger inside the circle
+        const length = Math.hypot(dx, dy) || 1
+        const reach = Math.min(length, radius * 0.7)
+        thumb.style.transform = `translate(${dx / length * reach}px, ${dy / length * reach}px)`
     }
 
     function release() {
-        stickPointer = null
-        running = 0
-        jumpArmed = true
-        joystickMode = false
-        zone.classList.remove("pressing")
+        padPointer = null
+        jumpHeld = false
         keys.left = false
         keys.right = false
         updateVelocity()
-        stick.classList.remove("active")
-        stick.classList.add("idle")
-        placeIdle()
+        pad.classList.remove("l", "r", "u", "touching")
+        thumb.style.transform = ""
     }
 
     zone.addEventListener("pointerdown", event => {
-        if (stickPointer !== null) return
+        if (padPointer !== null) return
         event.preventDefault()
-        stickPointer = event.pointerId
+        padPointer = event.pointerId
         zone.setPointerCapture(event.pointerId)
-        x = event.clientX
-        y = event.clientY
-        running = 0
-        jumpArmed = true
-        joystickMode = false
-        put()
-        knob.style.transform = ""
-        stick.classList.remove("idle")
-        stick.classList.add("active")
-        zone.classList.add("pressing")
-
-        //a press works like a button: the top of the band jumps, and below it
-        //the left half runs left and the right half runs right
-        const rect = zone.getBoundingClientRect()
-        const inTop = event.clientY - rect.top < rect.height * 0.36
-        const side = event.clientX - (rect.left + rect.width / 2)
-
-        if (inTop) {
-            if (!game.winning && !game.paused) player.jump()
-            noSlideJumpUntil = performance.now() + 300
-        } else if (side < -6) {
-            running = -1
-        } else if (side > 6) {
-            running = 1
-        }
-        keys.left = running === -1
-        keys.right = running === 1
-        updateVelocity()
+        pad.classList.add("touching")
+        read(event)
     })
 
     zone.addEventListener("pointermove", event => {
-        if (event.pointerId === stickPointer) move(event)
+        if (event.pointerId === padPointer) read(event)
     })
 
     ;["pointerup", "pointercancel", "lostpointercapture"].forEach(type =>
         zone.addEventListener(type, event => {
-            if (event.pointerId === stickPointer) release()
+            if (event.pointerId === padPointer) release()
         }))
-
-    return { placeIdle }
 }
 
-const sticks = [makeStick(document.getElementById("zone-left")), makeStick(document.getElementById("zone-right"))]
-
-function placeIdleSticks() {
-    if (isTouch) sticks.forEach(stick => stick.placeIdle())
-}
+makePad(document.getElementById("zone-left"))
+makePad(document.getElementById("zone-right"))
 
 setHand(savedHand())
-;["resize", "orientationchange", "fullscreenchange", "webkitfullscreenchange"].forEach(type =>
-    window.addEventListener(type, () => setTimeout(placeIdleSticks, 250)))
 
 //no menu when pressing for a long time
 document.addEventListener("contextmenu", event => { if (isTouch) event.preventDefault() })

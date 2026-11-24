@@ -66,8 +66,8 @@ function fitScreen() {
     let scale
     if (isTouch) {
         //the game uses the full height; the controls take what is left at the sides
-        //(about 29% of the width, between 200 and 260 px in total), so the game gets smaller only if the screen is not wide enough
-        const bands = Math.max(200, Math.min(260, 0.29 * availW))
+        //(about 24% of the width, between 170 and 220 px in total), so the game gets smaller only if the screen is not wide enough
+        const bands = Math.max(170, Math.min(220, 0.24 * availW))
         scale = Math.min(availH / 500, (availW - bands) / 900, 2)
     } else {
         scale = Math.min(availW / 900, availH / 500, 1)
@@ -119,48 +119,34 @@ function checkOrientation() {
 }
 portraitQuery.addEventListener("change", checkOrientation)
 
-//the left and right arrows work as one pad, so the thumb can slide from one to the other
-const dpad = document.getElementById("dpad")
-const padLeft = document.getElementById("padLeft")
-const padRight = document.getElementById("padRight")
-
-function padPress(event) {
-    const rect = dpad.getBoundingClientRect()
-    const goesLeft = event.clientX < rect.left + rect.width / 2
-    keys.left = goesLeft
-    keys.right = !goesLeft
-    padLeft.classList.toggle("on", goesLeft)
-    padRight.classList.toggle("on", !goesLeft)
-    updateVelocity()
+//each side of the screen has its own buttons: direction below, jump above
+function holdButton(button, onPress, onRelease) {
+    button.addEventListener("pointerdown", event => {
+        event.preventDefault()
+        button.setPointerCapture(event.pointerId)
+        button.classList.add("on")
+        onPress()
+    })
+    ;["pointerup", "pointercancel", "lostpointercapture"].forEach(type =>
+        button.addEventListener(type, () => {
+            if (!button.classList.contains("on")) return
+            button.classList.remove("on")
+            onRelease()
+        }))
 }
 
-function padRelease() {
-    keys.left = false
-    keys.right = false
-    padLeft.classList.remove("on")
-    padRight.classList.remove("on")
-    updateVelocity()
-}
+holdButton(document.getElementById("btnLeft"),
+    () => { keys.left = true; updateVelocity() },
+    () => { keys.left = false; updateVelocity() })
 
-dpad.addEventListener("pointerdown", event => {
-    event.preventDefault()
-    dpad.setPointerCapture(event.pointerId)
-    padPress(event)
-})
-dpad.addEventListener("pointermove", event => {
-    if (dpad.hasPointerCapture(event.pointerId)) padPress(event)
-})
-;["pointerup", "pointercancel", "lostpointercapture"].forEach(type => dpad.addEventListener(type, padRelease))
+holdButton(document.getElementById("btnRight"),
+    () => { keys.right = true; updateVelocity() },
+    () => { keys.right = false; updateVelocity() })
 
-//the jump button
-const jumpButton = document.getElementById("btnJump")
-jumpButton.addEventListener("pointerdown", event => {
-    event.preventDefault()
-    jumpButton.classList.add("on")
-    if (!game.winning && !game.paused) player.jump()
-})
-;["pointerup", "pointercancel", "pointerleave"].forEach(type =>
-    jumpButton.addEventListener(type, () => jumpButton.classList.remove("on")))
+;["jumpLeft", "jumpRight"].forEach(id =>
+    holdButton(document.getElementById(id),
+        () => { if (!game.winning && !game.paused) player.jump() },
+        () => {}))
 
 //no menu when pressing for a long time
 document.addEventListener("contextmenu", event => { if (isTouch) event.preventDefault() })

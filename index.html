@@ -5,83 +5,96 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jazz & Wine</title>
-    <link rel="stylesheet" href="styles/style.css?v=5">
+    <link rel="stylesheet" href="styles/style.css?v=6">
 </head>
 <body>
 
-  <div id="instructions">
-
-        <header>Instructions </header>
-
-    <section>
-
-      <ol id="instructionsList">
-
-        <li>Move from right to left with the keyboard.</li>
-        <li>Jump with the up arrow or the space bar.</li>
-        <li>Get all the glasses and bottles of wine.</li>
-        <li>Catch the golden bread: it falls slowly, but is waiting for it worth the risk?</li>
-        <li>Avoid the cats that fall and jump over the ones that run.</li>
-        <li>Fill the bar up to 100 points to win. If it empties down to the skull, you lose.</li>
-
-      </ol>
-
-    </section>
-
-</div>
-
   <div id="general">
 
-      <div id="out-canvas">
+    <!-- ===================== Cover ===================== -->
+    <div id="out-canvas">
 
-          <img src="images/jazz-original.png" alt="" id="jazz">
+      <div id="cover">
 
-        <section id="blockButton">
-                 
-           <header>Jazz &amp; Wine</header>
-           <p id="tagline">Help Jazz catch the wine… and beware of the cats!</p>
+        <div id="cover-head">
+          <h1>Jazz &amp; Wine</h1>
+          <p id="tagline">Help Jazz catch the wine&hellip; and beware of the cats!</p>
+        </div>
 
-           <ul id="icons">  
+        <div id="cover-body">
 
+          <img src="images/jazz-original.png" alt="Jazz, the dog" id="jazz">
 
-            <li><img src="images/wine glass3.png" alt="" id="glass">+2</li>
-            <li><img src="images/wine-bottle1.png" alt="" id="bottle">+5</li>
-            <li><img src="images/bread.png" alt="" id="bread">+10</li>
-            <li class="red"><img src="images/cat-3.png" alt="" id="cat">-1</li>
-            <li class="red"><img src="images/cat-2.png" alt="" id="catNinja">-10</li>
-            <li class="red"><img src="images/cat-run-icon.png" alt="" id="catRun">-10</li>
+          <div id="howto">
 
-    
-         </ul>
-                     
-           <button id="startButton">Play</button>
-           <p id="controls">← → move &nbsp;·&nbsp; ↑ / space jump</p>
-        
-        </section>
+            <div class="card">
+              <h2>Move</h2>
+              <div class="row">
+                <span class="keys"><kbd>&larr;</kbd><kbd>&rarr;</kbd></span>
+                <span class="text">run left and right</span>
+              </div>
+              <div class="row">
+                <span class="keys"><kbd>&uarr;</kbd><kbd class="wide">space</kbd></span>
+                <span class="text">jump</span>
+              </div>
+            </div>
 
-      </div>
-                       
-        <div id="in-canvas"  class="hidden">
+            <div class="card good">
+              <h2>Catch</h2>
+              <ul class="items">
+                <li><img src="images/wine glass3.png" alt="" id="glass"><b>+2</b><small>glass</small></li>
+                <li><img src="images/wine-bottle1.png" alt="" id="bottle"><b>+5</b><small>bottle</small></li>
+                <li><img src="images/bread.png" alt="" id="bread"><b>+10</b><small>golden bread<br>(rare, zigzags)</small></li>
+              </ul>
+            </div>
 
-           <canvas id="canvas" width="900" height="500" ></canvas>
-           <button id="playAgain" class="hidden">Play again</button>
+            <div class="card bad">
+              <h2>Avoid</h2>
+              <ul class="items">
+                <li><img src="images/cat-3.png" alt="" id="cat"><b>-1</b><small>cat</small></li>
+                <li><img src="images/cat-2.png" alt="" id="catNinja"><b>-10</b><small>big cat</small></li>
+                <li><img src="images/cat-run-icon.png" alt="" id="catRun"><b>-10</b><small>runner<br>(jump over it!)</small></li>
+              </ul>
+            </div>
+
+            <div class="card goal">
+              <h2>Win</h2>
+              <p>Fill the life bar up to <b>100</b> points. If it empties, you lose.</p>
+              <p>Each level has a <b>clock</b>: reach the next level before time runs out. There is no way back.</p>
+            </div>
+
+          </div>
 
         </div>
 
+        <button id="startButton">Play</button>
+
+      </div>
+
+    </div>
+
+    <!-- ===================== Game ===================== -->
+    <div id="in-canvas" class="hidden">
+
+      <canvas id="canvas" width="900" height="500"></canvas>
+      <button id="playAgain" class="hidden">Play again</button>
+
+    </div>
+
   </div>
 
-    <script src="js/background.js?v=5"></script>
-    <script src="js/catNinja.js?v=5"></script>
-    <script src="js/cat.js?v=5"></script>
-    <script src="js/bottleBig.js?v=5"></script>
-    <script src="js/runnerCat.js?v=5"></script>
-    <script src="js/bread.js?v=5"></script>
-    <script src="js/effects.js?v=5"></script>
-    <script src="js/tutorial.js?v=5"></script>
-    <script src="js/glass.js?v=5"></script>
-    <script src="js/player.js?v=5"></script>
-    <script src="js/game.js?v=5"></script>
-    <script src="js/index.js?v=5"></script>
+    <script src="js/background.js?v=6"></script>
+    <script src="js/catNinja.js?v=6"></script>
+    <script src="js/cat.js?v=6"></script>
+    <script src="js/bottleBig.js?v=6"></script>
+    <script src="js/runnerCat.js?v=6"></script>
+    <script src="js/bread.js?v=6"></script>
+    <script src="js/effects.js?v=6"></script>
+    <script src="js/tutorial.js?v=6"></script>
+    <script src="js/glass.js?v=6"></script>
+    <script src="js/player.js?v=6"></script>
+    <script src="js/game.js?v=6"></script>
+    <script src="js/index.js?v=6"></script>
 
 
 

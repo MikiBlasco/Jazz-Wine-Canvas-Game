@@ -35,16 +35,25 @@ class Game {
         this.level = 1
         this.levelFlash = 0
 
-        //the longer the dog stays in one level, the faster things fall
-        this.levelTicks = 0
-        this.graceTicks = 1500   // ~25 seconds without extra pressure
-        this.rampTicks = 3600    // ~60 seconds until the maximum
-        this.maxExtraSpeed = 0.4 // +40% at most
+        //every level has a clock (in seconds). If it runs out, the dog loses.
+        //Reaching the next level gives the full time of that level.
+        this.levelTimes = [100, 90, 50, 80]
+        this.timeLeft = this.levelTimes[0] * 60   // in frames (60 per second)
+        this.displayTime = 1                      // 0 to 1, smooth version for the bar
+        this.timeUp = false
+
+        //the closer the clock is to the end, the faster things fall (up to +35%)
+        this.maxExtraSpeed = 0.35
     }
 
-    //0 to 1: how much pressure the current level has built up
+    levelTotalFrames(){
+        return this.levelTimes[this.level - 1] * 60
+    }
+
+    //0 to 1: how much pressure the clock has built up (it starts after 40% of the time)
     pressure(){
-        return Math.max(0, Math.min(1, (this.levelTicks - this.graceTicks) / this.rampTicks))
+        const used = 1 - this.timeLeft / this.levelTotalFrames()
+        return Math.max(0, Math.min(1, (used - 0.4) / 0.6))
     }
 
     //score used for the difficulty and the background: it never goes below the start of the level reached
@@ -62,14 +71,16 @@ class Game {
         })
 
         if (reached > this.level) {
-            //a new level relaxes the pressure a little (it keeps 40% of what had built up)
-            const carried = 0.4 * this.pressure()
             this.level = reached
-            this.levelTicks = carried > 0 ? this.graceTicks + carried * this.rampTicks : 0
+            this.timeLeft = this.levelTotalFrames()   // the clock is full again
             this.levelFlash = 90
             this.effects.popup(`LEVEL ${this.level}`, this.ctx.canvas.width / 2, 150, "#ffd54a")
         } else {
-            this.levelTicks++
+            this.timeLeft--
+            if (this.timeLeft <= 0) {
+                this.timeLeft = 0
+                this.timeUp = true
+            }
         }
 
         const mul = 1 + this.maxExtraSpeed * this.pressure()
@@ -133,7 +144,7 @@ class Game {
         this.catNinja.generate(this.effectiveScore(), this.frameNumber)
         this.glass.generate(this.frameNumber)
         this.bottleBig.generate(this.effectiveScore(), this.frameNumber)
-        this.runnerCat.generate(this.effectiveScore())
+        this.runnerCat.generate(this.effectiveScore(), this.player.x + this.player.width / 2)
         this.bread.generate(this.effectiveScore())
     }
  
@@ -275,13 +286,13 @@ class Game {
 
     GameOver(){
    
-        if(this.score <= 0) {
+        if(this.score <= 0 || this.timeUp) {
             this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
             this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
             this.ctx.textAlign = "center";
             this.ctx.fillStyle = "#ff6b6b";
             this.ctx.font = "bold 52px sans-serif";
-            this.ctx.fillText("Game Over", this.ctx.canvas.width / 2, this.ctx.canvas.height / 2 - 20);
+            this.ctx.fillText(this.timeUp ? "Time's up!" : "Game Over", this.ctx.canvas.width / 2, this.ctx.canvas.height / 2 - 20);
             this.ctx.fillStyle = "white";
             this.ctx.font = "22px sans-serif";
             this.ctx.fillText(`You reached level ${this.level}`, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2 + 24);
@@ -361,13 +372,16 @@ class Game {
         }
     }
 
-    //-------------------------------------------------------------- progress bar
-    //The score is also the life of the dog. The bar goes from a skull (0 points:
-    //game over) to a star (100 points: you win). Near the skull the bar turns red
-    //and pulses, so it is clear how close the dog is to losing.
+    //-------------------------------------------------------------- bars at the top
+    //Top bar: the life of the dog. The score goes from a skull (0 points: game over)
+    //to a star (100 points: you win). Near the skull the bar turns red and pulses.
+    //Bottom bar: the clock of the level. It empties little by little; if it runs out you lose.
+    //The badge on the left is the level.
     drawProgressBar(){
         const ctx = this.ctx
-        const x = 96, y = 14, w = 684, h = 18, r = 9
+        const x = 96, w = 684, r = 7
+        const y = 10, h = 14          // life bar
+        const y2 = 32, h2 = 12        // clock bar
         const goal = 100
 
         //it moves smoothly instead of jumping
@@ -376,7 +390,6 @@ class Game {
         if (Math.abs(target - this.displayScore) < 0.05) this.displayScore = target
         const progress = this.displayScore / goal
 
-        //0 when the dog is safe, 1 when it is about to die
         const danger = this.dangerLevel()
         const pulse = 0.5 + 0.5 * Math.sin(this.ticks * 0.25)
 
@@ -392,7 +405,7 @@ class Game {
 
         ctx.save()
 
-        //empty bar
+        //---------------- life bar
         roundRect(x, y, w, h, r)
         ctx.fillStyle = "rgba(10, 0, 30, 0.5)"
         ctx.fill()
@@ -405,36 +418,32 @@ class Game {
         ctx.fillRect(x, y, w * 15 / goal, h)
         ctx.restore()
 
-        //full part: from wine red to gold
         if (progress > 0) {
             ctx.save()
             roundRect(x, y, w, h, r)
             ctx.clip()
-            const fillWidth = w * progress
             const gradient = ctx.createLinearGradient(x, 0, x + w, 0)
             gradient.addColorStop(0, "#a3123a")
             gradient.addColorStop(0.6, "#ff9a3c")
             gradient.addColorStop(1, "#ffd54a")
             ctx.fillStyle = gradient
-            ctx.fillRect(x, y, fillWidth, h)
-            //light on the upper half
+            ctx.fillRect(x, y, w * progress, h)
             ctx.fillStyle = "rgba(255, 255, 255, 0.25)"
-            ctx.fillRect(x, y, fillWidth, h / 2)
+            ctx.fillRect(x, y, w * progress, h / 2)
             ctx.restore()
         }
 
-        //marks where each screen starts (40, 70 and 80 points)
+        //marks where each level starts (40, 70 and 80 points)
         ctx.strokeStyle = "rgba(255, 255, 255, 0.55)"
         ctx.lineWidth = 2
         ;[40, 70, 80].forEach(mark => {
             const mx = x + w * mark / goal
             ctx.beginPath()
-            ctx.moveTo(mx, y + 3)
-            ctx.lineTo(mx, y + h - 3)
+            ctx.moveTo(mx, y + 2)
+            ctx.lineTo(mx, y + h - 2)
             ctx.stroke()
         })
 
-        //border (it pulses red when the dog is in danger)
         roundRect(x, y, w, h, r)
         ctx.strokeStyle = danger > 0
             ? `rgba(255, ${Math.round(255 - 190 * danger * pulse)}, ${Math.round(255 - 190 * danger * pulse)}, 0.95)`
@@ -442,18 +451,16 @@ class Game {
         ctx.lineWidth = 2 + 1.5 * danger * pulse
         ctx.stroke()
 
-        //left end: a skull (this is where you lose)
         this.drawSkull(66, y + h / 2, danger, pulse)
-        this.drawLevelBadge(26, y + h / 2)
 
-        //right end: a star and the number 100 (this is where you win)
-        const sx = x + w + 26, sy = y + h / 2
+        //right end: a star and the number 100
+        const sx = x + w + 20, sy = y + h / 2
         ctx.fillStyle = progress >= 0.8 ? "#ffd54a" : "rgba(255, 255, 255, 0.85)"
         ctx.strokeStyle = "#3a2a00"
-        ctx.lineWidth = 2
+        ctx.lineWidth = 1.5
         ctx.beginPath()
         for (let i = 0; i < 10; i++) {
-            const rad = i % 2 === 0 ? 13 : 5.5
+            const rad = i % 2 === 0 ? 11 : 4.5
             const a = -Math.PI / 2 + i * Math.PI / 5
             ctx.lineTo(sx + Math.cos(a) * rad, sy + Math.sin(a) * rad)
         }
@@ -461,15 +468,80 @@ class Game {
         ctx.fill()
         ctx.stroke()
 
-        ctx.font = "bold 20px sans-serif"
+        ctx.font = "bold 17px sans-serif"
         ctx.textAlign = "left"
         ctx.textBaseline = "middle"
         ctx.fillStyle = "white"
         ctx.shadowColor = "rgba(0, 0, 0, 0.7)"
         ctx.shadowBlur = 4
-        ctx.fillText("100", sx + 20, sy + 1)
+        ctx.fillText("100", sx + 16, sy + 1)
+        ctx.shadowBlur = 0
+
+        //---------------- clock bar
+        const total = this.levelTotalFrames()
+        const fraction = Math.max(0, Math.min(1, this.timeLeft / total))
+        //it empties smoothly, and refills fast when a new level starts
+        this.displayTime += (fraction - this.displayTime) * (fraction > this.displayTime ? 0.15 : 0.5)
+        if (Math.abs(fraction - this.displayTime) < 0.002) this.displayTime = fraction
+
+        const seconds = Math.ceil(this.timeLeft / 60)
+        const low = fraction < 0.25
+        const mid = fraction < 0.5
+        const clockPulse = low ? 0.5 + 0.5 * Math.sin(this.ticks * 0.3) : 0
+        const barColor = low ? "#ff4d4d" : mid ? "#ffb347" : "#5ec8ff"
+
+        roundRect(x, y2, w, h2, 6)
+        ctx.fillStyle = "rgba(10, 0, 30, 0.5)"
+        ctx.fill()
+
+        if (this.displayTime > 0) {
+            ctx.save()
+            roundRect(x, y2, w, h2, 6)
+            ctx.clip()
+            ctx.fillStyle = barColor
+            ctx.fillRect(x, y2, w * this.displayTime, h2)
+            ctx.fillStyle = "rgba(255, 255, 255, 0.28)"
+            ctx.fillRect(x, y2, w * this.displayTime, h2 / 2)
+            ctx.restore()
+        }
+
+        roundRect(x, y2, w, h2, 6)
+        ctx.strokeStyle = low
+            ? `rgba(255, ${Math.round(255 - 190 * clockPulse)}, ${Math.round(255 - 190 * clockPulse)}, 0.95)`
+            : "rgba(255, 255, 255, 0.8)"
+        ctx.lineWidth = 1.8 + 1.5 * clockPulse
+        ctx.stroke()
+
+        //little clock on the left
+        const cx = 66, cy = y2 + h2 / 2
+        ctx.beginPath()
+        ctx.arc(cx, cy, 9, 0, Math.PI * 2)
+        ctx.fillStyle = "#f4f0e8"
+        ctx.fill()
+        ctx.strokeStyle = low ? "#ff4d4d" : "#2a1010"
+        ctx.lineWidth = 2
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(cx, cy - 6)
+        ctx.lineTo(cx, cy)
+        ctx.lineTo(cx + 4, cy + 2)
+        ctx.strokeStyle = "#2a1010"
+        ctx.lineWidth = 1.6
+        ctx.stroke()
+
+        //time left (minutes:seconds)
+        const mm = Math.floor(seconds / 60), ss = String(seconds % 60).padStart(2, "0")
+        ctx.font = "bold 17px sans-serif"
+        ctx.textAlign = "left"
+        ctx.textBaseline = "middle"
+        ctx.fillStyle = low ? "#ff8080" : "white"
+        ctx.shadowColor = "rgba(0, 0, 0, 0.7)"
+        ctx.shadowBlur = 4
+        ctx.fillText(`${mm}:${ss}`, x + w + 10, cy + 1)
 
         ctx.restore()
+
+        this.drawLevelBadge(30, 27)
     }
 
     //round badge with the level number (it flashes when you reach a new level)
@@ -513,7 +585,7 @@ class Game {
         const ctx = this.ctx
         ctx.save()
         ctx.translate(cx + (danger > 0.3 ? Math.sin(this.ticks * 1.7) * 1.5 * danger : 0), cy)
-        const s = 1 + 0.18 * danger * pulse
+        const s = 0.8 * (1 + 0.18 * danger * pulse)
         ctx.scale(s, s)
 
         ctx.fillStyle = danger > 0 ? `rgb(255, ${Math.round(245 - 150 * danger)}, ${Math.round(235 - 160 * danger)})` : "#f4f0e8"

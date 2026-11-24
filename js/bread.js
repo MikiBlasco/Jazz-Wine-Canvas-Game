@@ -1,8 +1,7 @@
 //A very special bread that falls only a few times in the whole game.
 //It shines and gives twice the points of a bottle (+10).
-//Two ways to make it hard to get (the page address chooses one):
-//  default      -> it falls very slowly: the risk is waiting under it while cats come
-//  ?pan=zigzag  -> it falls at a normal speed, moving left and right
+//It falls at a normal speed but zigzagging left and right, so it is hard to catch.
+//(Adding ?pan=slow to the page address makes it fall very slowly instead.)
 class Bread {
     constructor(ctx) {
         this.ctx = ctx;
@@ -18,15 +17,15 @@ class Bread {
         this.width = 76;
         this.height = 40;
 
-        this.style = new URLSearchParams(window.location.search).get("pan") === "zigzag" ? "zigzag" : "slow"
+        this.style = new URLSearchParams(window.location.search).get("pan") === "slow" ? "slow" : "zigzag"
 
         //slow: slower than everything else, so you can watch it fall
         //zigzag: a normal speed (the glass falls at 1.8, the bottle at 2.5, the big cat at 3.9)
         this.vy = this.style === "zigzag" ? 3 : 1.5;
 
         //zigzag: how far it goes to each side and how fast it swings
-        this.amplitude = 110;
-        this.omega = 0.06;
+        this.amplitude = 150;
+        this.omega = 0.075;
 
         //a bread appears the first time the score reaches each of these numbers,
         //so there are only 5 in the whole game

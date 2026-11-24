@@ -29,7 +29,7 @@ class RunnerCat {
     }
 
     //same score ranges and frequency as CatNinja.generate
-    generate(score) {
+    generate(score, dogX) {
         this.ticks++
 
         if (this.ticks <= 100) return
@@ -41,13 +41,18 @@ class RunnerCat {
         if (score >= 90 && score <= 100) every = 120
 
         if (every > 0 && this.ticks % every === 0) {
-            this.spawn()
+            this.spawn(dogX)
         }
     }
 
-    spawn() {
-        //it can come from the left or from the right
-        const fromLeft = Math.random() < 0.5
+    //it always comes from the side that is farthest from the dog,
+    //so it never appears right on top of the dog (if the dog is in the middle, it is random)
+    spawn(dogX) {
+        const middle = this.ctx.canvas.width / 2
+        let fromLeft = Math.random() < 0.5
+        if (dogX !== undefined && Math.abs(dogX - middle) > 15) {
+            fromLeft = dogX > middle
+        }
 
         this.cats.push({
             x: fromLeft ? -this.width : this.ctx.canvas.width,

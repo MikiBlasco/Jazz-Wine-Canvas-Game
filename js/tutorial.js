@@ -46,7 +46,7 @@ class Tutorial {
     }
 
     runCat(game) {
-        game.runnerCat.spawn()
+        game.runnerCat.spawn(game.player.x + game.player.width / 2)
     }
 
     dropBottle(game) {
